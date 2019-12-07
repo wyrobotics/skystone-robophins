@@ -212,7 +212,6 @@ public class QuadrilateralMode extends LinearOpMode {
             }
             rotator.setPosition(Math.max(0, Math.min(1, rotator.getPosition() + rotatorInc)));
 
-
             if(!(!aPressed ^ this.gamepad2.a)) {
                 aPressed = !aPressed;
             }
