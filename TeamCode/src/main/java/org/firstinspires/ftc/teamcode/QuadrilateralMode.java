@@ -30,6 +30,9 @@ public class QuadrilateralMode extends LinearOpMode {
     private Servo leftPlatform;
     private Servo rightPlatform;
 
+    private Servo leftSlapper;
+    private Servo rightSlapper;
+
     private DigitalChannel extenderSwitch;
     private DigitalChannel lifterSwitch;
 
@@ -77,6 +80,9 @@ public class QuadrilateralMode extends LinearOpMode {
         leftPlatform = hardwareMap.get(Servo.class, "leftPlatform");
         rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
 
+        leftSlapper = hardwareMap.get(Servo.class, "leftSlapper");
+        rightSlapper = hardwareMap.get(Servo.class, "rightSlapper");
+
         extenderSwitch = hardwareMap.get(DigitalChannel.class, "extenderLimitSwitch");
         lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
 
@@ -103,13 +109,7 @@ public class QuadrilateralMode extends LinearOpMode {
 
             boolean horizontalLimit = false;
             boolean verticalLimit = false;
-            telemetry.addData("magnetic limit switch limit reached?" , extenderSwitch.getState());
-            telemetry.addData("NOT NEGATED leftstick y, extender y: ", this.gamepad2.left_stick_y);
             telemetry.addData("horizontalLimit: ", horizontalLimit);
-
-            telemetry.addData("rightTrigger: ", this.gamepad2.right_trigger);
-            telemetry.addData("leftTrigger: ", this.gamepad2.left_trigger);
-            telemetry.addData("rotator: ", rotator.getPosition());
 
             double flPower;
             double frPower;
@@ -163,6 +163,9 @@ public class QuadrilateralMode extends LinearOpMode {
                 rightPlatform.setPosition(0.0);
                 leftPlatform.setPosition(0.0);
             }
+
+            rightSlapper.setPosition(gamepad1.right_trigger);
+            leftSlapper.setPosition(gamepad1.left_trigger);
 
             if(!(!xPressed ^ this.gamepad1.x)) {
                 xPressed = !xPressed;
