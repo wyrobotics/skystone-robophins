@@ -20,7 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import java.lang.Math;
 
 @TeleOp @Config
-public class Dummy extends LinearOpMode {
+public class RotationPID extends LinearOpMode {
 
     //Drivebase motors
     private DcMotor frontLeft;
