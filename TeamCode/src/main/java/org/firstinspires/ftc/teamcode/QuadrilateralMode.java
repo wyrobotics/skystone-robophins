@@ -99,6 +99,9 @@ public class QuadrilateralMode extends LinearOpMode {
         leftPlatform.setDirection(Servo.Direction.REVERSE);
         rightPlatform.setDirection(Servo.Direction.FORWARD);
 
+        leftSlapper.setDirection(Servo.Direction.REVERSE);
+        rightSlapper.setDirection(Servo.Direction.FORWARD);
+
         lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         rotator.setPosition(0.5);
@@ -109,7 +112,6 @@ public class QuadrilateralMode extends LinearOpMode {
 
             boolean horizontalLimit = false;
             boolean verticalLimit = false;
-            telemetry.addData("horizontalLimit: ", horizontalLimit);
 
             double flPower;
             double frPower;
@@ -164,8 +166,8 @@ public class QuadrilateralMode extends LinearOpMode {
                 leftPlatform.setPosition(0.0);
             }
 
-            rightSlapper.setPosition(gamepad1.right_trigger);
-            leftSlapper.setPosition(gamepad1.left_trigger);
+            rightSlapper.setPosition((2 / 3) * gamepad1.right_trigger);
+            leftSlapper.setPosition((2 / 3) * gamepad1.left_trigger);
 
             if(!(!xPressed ^ this.gamepad1.x)) {
                 xPressed = !xPressed;
