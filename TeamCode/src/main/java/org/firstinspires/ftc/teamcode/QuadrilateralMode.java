@@ -194,11 +194,13 @@ public class QuadrilateralMode extends LinearOpMode {
             } else {
                 verticalLimit = false;
             }
+
             if (!verticalLimit) {
-                lifter.setPower(0.5 * this.gamepad2.right_stick_y);
+                lifter.setPower((0.5 + (Math.signum(this.gamepad2.right_stick_y) * -0.2)) * this.gamepad2.right_stick_y);
             } else {
-                lifter.setPower(Math.min(0,0.5 * this.gamepad2.right_stick_y));
+                lifter.setPower(Math.min(0,(0.5 + (Math.signum(this.gamepad2.right_stick_y) * -0.2)) * this.gamepad2.right_stick_y));
             }
+
             telemetry.addData("Lifter limit? ", verticalLimit);
 
             if(!(!rightTrigger ^ (0 != this.gamepad2.right_trigger))) {
@@ -208,9 +210,9 @@ public class QuadrilateralMode extends LinearOpMode {
                 leftTrigger = !leftTrigger;
             }
             if(rightTrigger && !leftTrigger) {
-                rotatorInc = 0.002;
+                rotatorInc = 0.02;
             } else if(leftTrigger) {
-                rotatorInc = -0.002;
+                rotatorInc = -0.02;
             } else {
                 rotatorInc = 0;
             }
@@ -230,8 +232,7 @@ public class QuadrilateralMode extends LinearOpMode {
                 grabber.setPower(0);
             }
 
-            telemetry.addData("Right trigger gp2: ", this.gamepad2.right_trigger);
-            telemetry.addData("Rotator pos: ", rotator.getPosition());
+            telemetry.addData("Lifter power: ", lifter.getPower());
 
             telemetry.update();
         }
