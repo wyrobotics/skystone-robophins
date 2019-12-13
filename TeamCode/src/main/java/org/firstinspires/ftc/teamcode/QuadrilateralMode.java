@@ -120,6 +120,8 @@ public class QuadrilateralMode extends LinearOpMode {
 
             boolean aPressed = false;
             boolean bPressed = false;
+            boolean aPressed2 = false;
+            boolean bPressed2 = false;
             boolean yPressed = false;
             boolean xPressed = false;
 
@@ -133,7 +135,7 @@ public class QuadrilateralMode extends LinearOpMode {
 
             double rotatorInc = 0.0;
 
-            double[] leftStick = {-this.gamepad1.left_stick_x, this.gamepad1.left_stick_y};
+            double[] leftStick = {-this.gamepad1.left_stick_x, -this.gamepad1.left_stick_y};
 
             //are theta gives a list of len 2 with r, theta using pythag theorem and arctan
             double[] areTheta = new double[2];
@@ -169,7 +171,7 @@ public class QuadrilateralMode extends LinearOpMode {
             rightSlapper.setPosition((2 / 3) * gamepad1.right_trigger);
             leftSlapper.setPosition((2 / 3) * gamepad1.left_trigger);
 
-            if(!(!xPressed ^ this.gamepad1.x)) {
+            if(!(!xPressed ^ this.gamepad2.x)) {
                 xPressed = !xPressed;
             }
             if(xPressed) {
@@ -193,9 +195,9 @@ public class QuadrilateralMode extends LinearOpMode {
                 verticalLimit = false;
             }
             if (!verticalLimit) {
-                lifter.setPower(-0.5 * this.gamepad2.right_stick_y);
+                lifter.setPower(0.5 * this.gamepad2.right_stick_y);
             } else {
-                lifter.setPower(Math.max(0,-0.5 * this.gamepad2.right_stick_y));
+                lifter.setPower(Math.min(0,0.5 * this.gamepad2.right_stick_y));
             }
             telemetry.addData("Lifter limit? ", verticalLimit);
 
@@ -214,20 +216,22 @@ public class QuadrilateralMode extends LinearOpMode {
             }
             rotator.setPosition(Math.max(0, Math.min(1, rotator.getPosition() + rotatorInc)));
 
-            if(!(!aPressed ^ this.gamepad2.a)) {
-                aPressed = !aPressed;
+            if(!(!aPressed2 ^ this.gamepad2.a)) {
+                aPressed2 = !aPressed2;
             }
-            if(!(!bPressed ^ this.gamepad2.b)) {
-                bPressed = !bPressed;
+            if(!(!bPressed2 ^ this.gamepad2.b)) {
+                bPressed2 = !bPressed2;
             }
-            if(aPressed && !bPressed) {
+            if(aPressed2 && !bPressed2) {
                 grabber.setPower(-1.0);
-            } else if(bPressed) {
+            } else if(bPressed2) {
                 grabber.setPower(1.0);
             } else {
                 grabber.setPower(0);
             }
 
+            telemetry.addData("Right trigger gp2: ", this.gamepad2.right_trigger);
+            telemetry.addData("Rotator pos: ", rotator.getPosition());
 
             telemetry.update();
         }
