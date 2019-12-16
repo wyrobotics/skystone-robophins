@@ -86,6 +86,7 @@ public class Auton_Blue extends LinearOpMode {
     int DIRECTION = -1; //blue
 
     private DigitalChannel extenderSwitch;
+    private DigitalChannel lifterSwitch;
 
     private DcMotor frontLeft;
     private DcMotor frontRight;
@@ -105,7 +106,7 @@ public class Auton_Blue extends LinearOpMode {
     private double forwardTarget = 2178; //experimental: 2178, but rolls
     private double liftTarget = 900; //NEED VALUE FOR THIS, updated to be a bit over blocc height so it doesn't tip
     //lift target is closer to 800 now
-    private double bridgeHeight = 150;//270; // NEED REAL VALUE THIS IS BOTH BRDGEHEGHT AND MOVING ALL THE WAY DOWN
+//    private double bridgeHeight = 150;//270 // NEED REAL VALUE THIS IS BOTH BRDGEHEGHT AND MOVING ALL THE WAY DOWN
 
     @Override public void runOpMode() {
 

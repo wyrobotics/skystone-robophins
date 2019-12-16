@@ -91,6 +91,11 @@ public class QuadrilateralMode extends LinearOpMode {
         backLeft.setDirection(DcMotor.Direction.FORWARD);
         backRight.setDirection(DcMotor.Direction.REVERSE);
 
+        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -99,12 +104,16 @@ public class QuadrilateralMode extends LinearOpMode {
         leftPlatform.setDirection(Servo.Direction.REVERSE);
         rightPlatform.setDirection(Servo.Direction.FORWARD);
 
-        leftSlapper.setDirection(Servo.Direction.REVERSE);
+        leftSlapper.setDirection(Servo.Direction.FORWARD);
         rightSlapper.setDirection(Servo.Direction.FORWARD);
 
         lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         rotator.setPosition(0.5);
+
+
 
         waitForStart();
 
@@ -127,15 +136,21 @@ public class QuadrilateralMode extends LinearOpMode {
 
             boolean rightTrigger = false;
             boolean leftTrigger = false;
+
             boolean rightTab = false;
             boolean leftTab = false;
 
             boolean dPadUp = false;
             boolean dPadDown = false;
 
+            double rightTriggerValue = 0.0;
+            double leftTriggerValue = 0.0;
+
             double rotatorInc = 0.0;
 
-            double[] leftStick = {-this.gamepad1.left_stick_x, -this.gamepad1.left_stick_y};
+            double speedMul = 1;
+
+            double[] leftStick = {this.gamepad1.left_stick_x, -this.gamepad1.left_stick_y};
 
             //are theta gives a list of len 2 with r, theta using pythag theorem and arctan
             double[] areTheta = new double[2];
@@ -144,15 +159,15 @@ public class QuadrilateralMode extends LinearOpMode {
 
             double[] longSquare = squareProject(areTheta[1] - (Math.PI / 4));
 
-            longSquare[0] = longSquare[0] * areTheta[0];
-            longSquare[1] = longSquare[1] * areTheta[0];
+            longSquare[0] = longSquare[0] * Math.pow(areTheta[0],2);
+            longSquare[1] = longSquare[1] * Math.pow(areTheta[0],2);
 
             double rotationScaler = 1 + Math.abs(this.gamepad1.right_stick_x);
 
-            frontLeft.setPower((longSquare[0] - this.gamepad1.right_stick_x)/rotationScaler);
-            frontRight.setPower((longSquare[1] + this.gamepad1.right_stick_x)/rotationScaler);
-            backLeft.setPower((longSquare[1] - this.gamepad1.right_stick_x)/rotationScaler);
-            backRight.setPower((longSquare[0] + this.gamepad1.right_stick_x)/rotationScaler);
+            frontLeft.setPower(0.75 * (longSquare[0] + this.gamepad1.right_stick_x)/rotationScaler);
+            frontRight.setPower(0.75 * (longSquare[1] - this.gamepad1.right_stick_x)/rotationScaler);
+            backLeft.setPower(0.75 * (longSquare[1] + this.gamepad1.right_stick_x)/rotationScaler);
+            backRight.setPower(0.75 * (longSquare[0] - this.gamepad1.right_stick_x)/rotationScaler);
 
             if(!(!aPressed ^ this.gamepad1.a)) {
                 aPressed = !aPressed;
@@ -164,12 +179,18 @@ public class QuadrilateralMode extends LinearOpMode {
                 rightPlatform.setPosition(0.4);
                 leftPlatform.setPosition(0.4);
             } else if(bPressed) {
-                rightPlatform.setPosition(0.0);
-                leftPlatform.setPosition(0.0);
+                rightPlatform.setPosition(0.1);
+                leftPlatform.setPosition(0.1);
             }
 
-            rightSlapper.setPosition((2 / 3) * gamepad1.right_trigger);
-            leftSlapper.setPosition((2 / 3) * gamepad1.left_trigger);
+            /*
+            rightTriggerValue = this.gamepad1.right_trigger;
+            leftTriggerValue = this.gamepad1.left_trigger;
+
+            rightSlapper.setPosition(Math.min(0.75,1 - ((2 / 3) * rightTriggerValue)));
+            leftSlapper.setPosition(1 - ((2 / 3) * leftTriggerValue));
+
+             */
 
             if(!(!xPressed ^ this.gamepad2.x)) {
                 xPressed = !xPressed;
@@ -210,9 +231,9 @@ public class QuadrilateralMode extends LinearOpMode {
                 leftTrigger = !leftTrigger;
             }
             if(rightTrigger && !leftTrigger) {
-                rotatorInc = 0.02;
+                rotatorInc = 0.01;
             } else if(leftTrigger) {
-                rotatorInc = -0.02;
+                rotatorInc = -0.01;
             } else {
                 rotatorInc = 0;
             }
@@ -232,7 +253,27 @@ public class QuadrilateralMode extends LinearOpMode {
                 grabber.setPower(0);
             }
 
-            telemetry.addData("Lifter power: ", lifter.getPower());
+            //telemetry.addData("Lifter power: ", lifter.getPower());
+            telemetry.addData("Right Trigger: ", this.gamepad1.right_trigger);
+            telemetry.addData("RightTriggerVal: ", rightTriggerValue);
+            telemetry.addData("Right Slapper: ", rightSlapper.getPosition());
+
+
+            if(!(!yPressed ^ this.gamepad1.y)) {
+                yPressed = !yPressed;
+            }
+            if(yPressed) {
+                if(speedMul == 1) {
+                    speedMul = 0.2;
+                } else {
+                    speedMul = 1;
+                }
+            }
+
+            //telemetry.addData("FR: ", frontRight.getCurrentPosition());
+            //telemetry.addData("FL: ", frontLeft.getCurrentPosition());
+            //telemetry.addData("BR: ", backRight.getCurrentPosition());
+            //telemetry.addData("BL: ", backLeft.getCurrentPosition());
 
             telemetry.update();
         }

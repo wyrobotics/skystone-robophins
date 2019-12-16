@@ -70,7 +70,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
  * is explained in {@link ConceptVuforiaNavigation}.
  */
 @Autonomous
-public class PlatformAuton_Blue extends LinearOpMode {
+public class PlatformAuton_Red extends LinearOpMode {
     /**note: most of this stuff is from sample code not me bc smol brain but it works so ya know
      * also note that the sample code was written with relic recovery from 2yrs ago in mind
      */
@@ -163,6 +163,8 @@ public class PlatformAuton_Blue extends LinearOpMode {
          *
          * LIFTING ARM UP TO PLACE BLOCK WILL REQUIRE ENCODER VALUES.
          */
+
+        lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
         frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
         frontRight = hardwareMap.get(DcMotor.class, "frontRight");
         backLeft = hardwareMap.get(DcMotor.class, "backLeft");
@@ -177,8 +179,6 @@ public class PlatformAuton_Blue extends LinearOpMode {
 
         leftPlatform = hardwareMap.get(Servo.class, "leftPlatform");
         rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
-
-        lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
 
 
         telemetry.addData("Status:", "Running");
@@ -248,12 +248,12 @@ public class PlatformAuton_Blue extends LinearOpMode {
         moveStraight(1.7, true);
         sleep(500);
 
-        turn(110,5000, true);
+        turn(110,5000, false);
         moveStraight(1.6, false);
         leftPlatform.setPosition(0.4);
         rightPlatform.setPosition(0.4);
         sleep(500);
-        moveStrafe(0.5, true);
+        moveStrafe(0.7, true);
 
         lift(1, true);
         extender.setPower(1);
