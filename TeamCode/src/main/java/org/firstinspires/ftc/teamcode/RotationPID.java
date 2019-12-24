@@ -19,7 +19,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import java.lang.Math;
 
-@TeleOp @Config
+import static org.firstinspires.ftc.teamcode.PIDConstants.Kd;
+import static org.firstinspires.ftc.teamcode.PIDConstants.Ki;
+import static org.firstinspires.ftc.teamcode.PIDConstants.Kp;
+
+
+@TeleOp
 public class RotationPID extends LinearOpMode {
 
     //Drivebase motors
@@ -92,10 +97,10 @@ public class RotationPID extends LinearOpMode {
         leftPlatform = hardwareMap.get(Servo.class, "leftPlatform");
         rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
 
-        frontLeft.setDirection(DcMotor.Direction.FORWARD);
-        frontRight.setDirection(DcMotor.Direction.REVERSE);
-        backLeft.setDirection(DcMotor.Direction.FORWARD);
-        backRight.setDirection(DcMotor.Direction.REVERSE);
+        frontLeft.setDirection(DcMotor.Direction.REVERSE);
+        frontRight.setDirection(DcMotor.Direction.FORWARD);
+        backLeft.setDirection(DcMotor.Direction.REVERSE);
+        backRight.setDirection(DcMotor.Direction.FORWARD);
 
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -126,8 +131,8 @@ public class RotationPID extends LinearOpMode {
 
         imu.initialize(parameters);
 
-        FtcDashboard dashboard = FtcDashboard.getInstance();
-        telemetry = dashboard.getTelemetry();
+        //FtcDashboard dashboard = FtcDashboard.getInstance();
+        //telemetry = dashboard.getTelemetry();
 
         boolean pressedYet = false;
 
@@ -161,9 +166,11 @@ public class RotationPID extends LinearOpMode {
         // returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
         // 180 degrees. We detect this transition and track the total cumulative angle of rotation.
 
-        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
 
-        double deltaAngle = angles.firstAngle - lastAngles.firstAngle;
+        //tried: ZYX, XYZ, YZX, ZXY*,
+
+        double deltaAngle = angles.secondAngle - lastAngles.secondAngle;
 
         if (deltaAngle < -180) {
             deltaAngle += 360;
@@ -174,14 +181,61 @@ public class RotationPID extends LinearOpMode {
 
         lastAngles = angles;
 
+        telemetry.addData("First angle: ", angles.firstAngle);
+        telemetry.update();
+
         return globalAngle;
     }
 
     double targetPosition = 0;
 
-    double Kp = 0.5;
-    double Kd = 0;
-    double Ki = 0;
+    //double Kp = 0.03;
+    //double Ki = 0.00026;
+    //double Kd = 0.0019;
+
+    /*
+    double Kp = 0.03;
+    double Kd = 0.0019;
+    double Ki = 0.0025;
+
+     */
+
+    /*
+    double Kp = 0.03;
+    double Kd = 0.000007;
+    double Ki = 0.0000028;
+    Decent ^^^
+     */
+
+
+    //double Kp = 0.03;
+    //double Ki = 0.000005;
+    //double Kd = 0.000007;
+    //double Kd = 0.0003;
+    //Kinda ass ^^^
+
+    //ALL OF THE ABOVE ARE kinda bad
+
+
+    //double Kp = 0.013;
+    //double Ki = 0.000015;
+    //double Kd = 0.00032;
+    //GOOD ^^
+
+    //double Kp = 0.016;
+    //double Ki = 0.000015;
+    //double Kd = 0.0006;
+    //GOOD ^^
+
+
+    //Trash now; work from here though
+
+
+
+
+    //double Kp = 0.025;
+    //double Ki = 0.00001;
+    //double Kd = 0.0003;
 
     private double error() {
         return targetPosition - getAngle();
@@ -190,7 +244,7 @@ public class RotationPID extends LinearOpMode {
     private void turn90() {
 
         double lastError = error();
-        double lastTime = getRuntime();
+        double lastTime = System.currentTimeMillis();
 
         double proportionTerm;
         double derivativeTerm;
@@ -198,11 +252,12 @@ public class RotationPID extends LinearOpMode {
 
         double u = 0;
 
-        while(Math.abs(error()) > 1) {
-
-            proportionTerm = Kp * error();
-            derivativeTerm = Kd * ((error() - lastError) / (time - lastTime));
-            integralTerm += Ki * error() * (time - lastTime);
+        while(opModeIsActive() && Math.abs(error()) > 1) {
+            double error = error();
+            double time = System.currentTimeMillis();
+            proportionTerm = Kp * error;
+            derivativeTerm = Kd * ((error - lastError) / Math.abs((lastTime - time)));
+            integralTerm += Ki * error * Math.abs((lastTime - time));
 
             u = proportionTerm + integralTerm + derivativeTerm;
 
@@ -211,13 +266,16 @@ public class RotationPID extends LinearOpMode {
             backLeft.setPower(u);
             backRight.setPower(-u);
 
-            telemetry.addData("error: ", error());
+            telemetry.addData("error: ", lastError);
             telemetry.addData("front left: ", frontLeft.getPower());
             telemetry.addData("frontRight: ", frontRight.getPower());
             telemetry.addData("back left: ", backLeft.getPower());
             telemetry.addData("back right: ", backRight.getPower());
 
             telemetry.update();
+
+            lastError = error;
+            lastTime = time;
         }
 
         frontLeft.setPower(0);

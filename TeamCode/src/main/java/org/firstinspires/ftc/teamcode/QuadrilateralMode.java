@@ -164,10 +164,10 @@ public class QuadrilateralMode extends LinearOpMode {
 
             double rotationScaler = 1 + Math.abs(this.gamepad1.right_stick_x);
 
-            frontLeft.setPower(0.75 * (longSquare[0] + this.gamepad1.right_stick_x)/rotationScaler);
-            frontRight.setPower(0.75 * (longSquare[1] - this.gamepad1.right_stick_x)/rotationScaler);
-            backLeft.setPower(0.75 * (longSquare[1] + this.gamepad1.right_stick_x)/rotationScaler);
-            backRight.setPower(0.75 * (longSquare[0] - this.gamepad1.right_stick_x)/rotationScaler);
+            frontLeft.setPower(1 * (longSquare[0] + this.gamepad1.right_stick_x)/rotationScaler);
+            frontRight.setPower(1 * (longSquare[1] - this.gamepad1.right_stick_x)/rotationScaler);
+            backLeft.setPower(1 * (longSquare[1] + this.gamepad1.right_stick_x)/rotationScaler);
+            backRight.setPower(1 * (longSquare[0] - this.gamepad1.right_stick_x)/rotationScaler);
 
             if(!(!aPressed ^ this.gamepad1.a)) {
                 aPressed = !aPressed;
@@ -254,9 +254,9 @@ public class QuadrilateralMode extends LinearOpMode {
             }
 
             //telemetry.addData("Lifter power: ", lifter.getPower());
-            telemetry.addData("Right Trigger: ", this.gamepad1.right_trigger);
-            telemetry.addData("RightTriggerVal: ", rightTriggerValue);
-            telemetry.addData("Right Slapper: ", rightSlapper.getPosition());
+            //telemetry.addData("Right Trigger: ", this.gamepad1.right_trigger);
+            //telemetry.addData("RightTriggerVal: ", rightTriggerValue);
+            //telemetry.addData("Right Slapper: ", rightSlapper.getPosition());
 
 
             if(!(!yPressed ^ this.gamepad1.y)) {
@@ -270,10 +270,10 @@ public class QuadrilateralMode extends LinearOpMode {
                 }
             }
 
-            //telemetry.addData("FR: ", frontRight.getCurrentPosition());
-            //telemetry.addData("FL: ", frontLeft.getCurrentPosition());
-            //telemetry.addData("BR: ", backRight.getCurrentPosition());
-            //telemetry.addData("BL: ", backLeft.getCurrentPosition());
+            telemetry.addData("FR: ", frontRight.getCurrentPosition());
+            telemetry.addData("FL: ", frontLeft.getCurrentPosition());
+            telemetry.addData("BR: ", backRight.getCurrentPosition());
+            telemetry.addData("BL: ", backLeft.getCurrentPosition());
 
             telemetry.update();
         }
