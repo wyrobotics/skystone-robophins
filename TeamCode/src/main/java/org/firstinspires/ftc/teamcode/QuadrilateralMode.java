@@ -80,9 +80,6 @@ public class QuadrilateralMode extends LinearOpMode {
         leftPlatform = hardwareMap.get(Servo.class, "leftPlatform");
         rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
 
-        leftSlapper = hardwareMap.get(Servo.class, "leftSlapper");
-        rightSlapper = hardwareMap.get(Servo.class, "rightSlapper");
-
         extenderSwitch = hardwareMap.get(DigitalChannel.class, "extenderLimitSwitch");
         lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
 
@@ -103,9 +100,6 @@ public class QuadrilateralMode extends LinearOpMode {
 
         leftPlatform.setDirection(Servo.Direction.REVERSE);
         rightPlatform.setDirection(Servo.Direction.FORWARD);
-
-        leftSlapper.setDirection(Servo.Direction.FORWARD);
-        rightSlapper.setDirection(Servo.Direction.FORWARD);
 
         lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -164,10 +158,10 @@ public class QuadrilateralMode extends LinearOpMode {
 
             double rotationScaler = 1 + Math.abs(this.gamepad1.right_stick_x);
 
-            frontLeft.setPower(1 * (longSquare[0] + this.gamepad1.right_stick_x)/rotationScaler);
-            frontRight.setPower(1 * (longSquare[1] - this.gamepad1.right_stick_x)/rotationScaler);
-            backLeft.setPower(1 * (longSquare[1] + this.gamepad1.right_stick_x)/rotationScaler);
-            backRight.setPower(1 * (longSquare[0] - this.gamepad1.right_stick_x)/rotationScaler);
+            frontLeft.setPower(0.6 * (longSquare[0] + this.gamepad1.right_stick_x)/rotationScaler);
+            frontRight.setPower(0.6 * (longSquare[1] - this.gamepad1.right_stick_x)/rotationScaler);
+            backLeft.setPower(0.6 * (longSquare[1] + this.gamepad1.right_stick_x)/rotationScaler);
+            backRight.setPower(0.6 * (longSquare[0] - this.gamepad1.right_stick_x)/rotationScaler);
 
             if(!(!aPressed ^ this.gamepad1.a)) {
                 aPressed = !aPressed;
@@ -182,6 +176,9 @@ public class QuadrilateralMode extends LinearOpMode {
                 rightPlatform.setPosition(0.1);
                 leftPlatform.setPosition(0.1);
             }
+
+            telemetry.addData("RightPlat: ", rightPlatform.getPosition());
+            telemetry.addData("LeftPlat: ", leftPlatform.getPosition());
 
             /*
             rightTriggerValue = this.gamepad1.right_trigger;
@@ -270,10 +267,6 @@ public class QuadrilateralMode extends LinearOpMode {
                 }
             }
 
-            telemetry.addData("FR: ", frontRight.getCurrentPosition());
-            telemetry.addData("FL: ", frontLeft.getCurrentPosition());
-            telemetry.addData("BR: ", backRight.getCurrentPosition());
-            telemetry.addData("BL: ", backLeft.getCurrentPosition());
 
             telemetry.update();
         }
