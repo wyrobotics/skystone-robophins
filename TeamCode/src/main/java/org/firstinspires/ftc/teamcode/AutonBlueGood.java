@@ -23,6 +23,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
+import static org.firstinspires.ftc.teamcode.PIDConstants.Kd;
+import static org.firstinspires.ftc.teamcode.PIDConstants.Ki;
+import static org.firstinspires.ftc.teamcode.PIDConstants.Kp;
+
 @Autonomous
 public class AutonBlueGood extends LinearOpMode {
 
@@ -591,6 +595,57 @@ public class AutonBlueGood extends LinearOpMode {
     public void turnAngle(double angle, boolean counterclockwise, double error) {
 
         turn(startAngle + angle - getAngle() - error, counterclockwise);
+
+    }
+
+    private double error(double targetPosition) {
+        return targetPosition - getAngle();
+    }
+
+    private void turnPID(double target, boolean ccw) {
+
+        double dir = ccw ? 1 : -1;
+
+        double lastError = error(target);
+        double lastTime = System.currentTimeMillis();
+        double initTime = lastTime;
+
+        double proportionTerm;
+        double derivativeTerm;
+        double integralTerm = 0;
+
+        double u = 0;
+
+        while(opModeIsActive() && Math.abs(error(target)) > 1 && System.currentTimeMillis() - initTime < 10000) {
+            double error = error(target);
+            double time = System.currentTimeMillis();
+            proportionTerm = Kp * error;
+            derivativeTerm = Kd * ((error - lastError) / Math.abs((lastTime - time)));
+            integralTerm += Ki * error * Math.abs((lastTime - time));
+
+            u = proportionTerm + integralTerm + derivativeTerm;
+
+            frontLeft.setPower(u * dir);
+            frontRight.setPower(-u * dir);
+            backLeft.setPower(u * dir);
+            backRight.setPower(-u * dir);
+
+            telemetry.addData("error: ", lastError);
+            telemetry.addData("front left: ", frontLeft.getPower());
+            telemetry.addData("frontRight: ", frontRight.getPower());
+            telemetry.addData("back left: ", backLeft.getPower());
+            telemetry.addData("back right: ", backRight.getPower());
+
+            telemetry.update();
+
+            lastError = error;
+            lastTime = time;
+        }
+
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
 
     }
 
