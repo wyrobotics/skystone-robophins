@@ -1,79 +1,47 @@
-/* Copyright (c) 2017 FIRST. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted (subject to the limitations in the disclaimer below) provided that
- * the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this list
- * of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice, this
- * list of conditions and the following disclaimer in the documentation and/or
- * other materials provided with the distribution.
- *
- * Neither the name of FIRST nor the names of its contributors may be used to endorse or
- * promote products derived from this software without specific prior written permission.
- *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
- * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-//mport org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuMarkInstanceId;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
-/*
- * This OpMode illustrates the basics of using the Vuforia engine to determine
- * the identity of Vuforia VuMarks encountered on the field. The code is structured as
- * a LinearOpMode. It shares much structure with {@link ConceptVuforiaNavigation}; we do not here
- * duplicate the core Vuforia documentation found there, but rather instead focus on the
- * differences between the use of Vuforia for navigation vs VuMark identification.
- *
- * @see ConceptVuforiaNavigation
- * @see VuforiaLocalizer
- * @see VuforiaTrackableDefaultListener
- * see  ftc_app/doc/tutorial/FTC_FieldCoordinateSystemDefinition.pdf
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
- *
- * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
- * is explained in {@link ConceptVuforiaNavigation}.
- */
-//@Autonomous
-public class PlatformAuton_Blue extends LinearOpMode {
-    /**note: most of this stuff is from sample code not me bc smol brain but it works so ya know
-     * also note that the sample code was written with relic recovery from 2yrs ago in mind
-     */
+@Autonomous
+public class AutonBluePID extends LinearOpMode {
+
+    private DcMotor frontRight;
+    private DcMotor frontLeft;
+    private DcMotor backRight;
+    private DcMotor backLeft;
+
+    private DcMotor lifter;
+    private CRServo extender;
+    private Servo rotator;
+    private CRServo grabber;
+
+    //Plate movers, names based on facing robot from behind
+    private Servo leftPlatform;
+    private Servo rightPlatform;
+
+    private DigitalChannel extenderSwitch;
+    private DigitalChannel lifterSwitch;
+
+    private double strafeTarget = 950;
+    private double forwardTarget = 520; //experimental: 2178, but rolls
+    private double liftTarget = 850; //NEED VALUE FOR THIS
+    private double turnTarget = 2150;
+    private double bridgeHeight = 270; // NEED REAL VALUE THIS IS BOTH BRDGEHEGHT AND MOVING ALL THE WAY DOWN
 
     public static final String TAG = "Vuforia VuMark Sample";
 
@@ -85,30 +53,55 @@ public class PlatformAuton_Blue extends LinearOpMode {
      */
     VuforiaLocalizer vuforia;
 
-    int DIRECTION = -1; //blue
+    @Override
+    public void runOpMode() {
 
-    private DcMotor frontLeft;
-    private DcMotor frontRight;
-    private DcMotor backLeft;
-    private DcMotor backRight;
+        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
+        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
+        backRight = hardwareMap.get(DcMotor.class, "backRight");
 
-    private DcMotor lifter;
-    private CRServo extender;
-    private Servo rotator;
-    private CRServo grabber;
+        lifter = hardwareMap.get(DcMotor.class, "lifter");
+        extender = hardwareMap.get(CRServo.class, "extender");
+        rotator = hardwareMap.get(Servo.class, "rotator");
+        grabber = hardwareMap.get(CRServo.class, "grabber");
 
-    private Servo rightPlatform;
-    private Servo leftPlatform;
+        leftPlatform = hardwareMap.get(Servo.class, "leftPlatform");
+        rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
 
-    private DigitalChannel lifterSwitch;
+        extenderSwitch = hardwareMap.get(DigitalChannel.class, "extenderLimitSwitch");
+        lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
 
+        frontLeft.setDirection(DcMotor.Direction.REVERSE);
+        frontRight.setDirection(DcMotor.Direction.REVERSE);
+        backLeft.setDirection(DcMotor.Direction.REVERSE);
+        backRight.setDirection(DcMotor.Direction.REVERSE);
 
-    private double strafeTarget = 550;
-    private double forwardTarget = 575.76; //experimental: 2178, but rolls
-    private double liftTarget = 850; //NEED VALUE FOR THIS
-    private double bridgeHeight = 270; // NEED REAL VALUE THIS IS BOTH BRDGEHEGHT AND MOVING ALL THE WAY DOWN
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-    @Override public void runOpMode() {
+        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        leftPlatform.setDirection(Servo.Direction.REVERSE);
+        rightPlatform.setDirection(Servo.Direction.FORWARD);
+
+        lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        rotator.setPosition(0.5);
+
+        rightPlatform.setPosition(0.6);
+        leftPlatform.setPosition(0.6);
 
         /*
          * To start up Vuforia, tell it the view that we wish to use for camera monitor (on the RC phone);
@@ -154,115 +147,37 @@ public class PlatformAuton_Blue extends LinearOpMode {
         //i have no idea what this line does, but the sample code said it was helpful for debugging and not necessary
         //skyStoneTemplate.setName("skyStoneTemplate");
 
-
-        /**
-         * Movement instantiation
-         *
-         * disclaimer: hardware mapping is yeeted from jshah's code, as is cr servo stuff
-         *
-         *
-         * LIFTING ARM UP TO PLACE BLOCK WILL REQUIRE ENCODER VALUES.
-         */
-        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
-        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
-        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
-        backRight = hardwareMap.get(DcMotor.class, "backRight");
-
-        lifter = hardwareMap.get(DcMotor.class, "lifter");
-
-
-        extender = hardwareMap.get(CRServo.class, "extender");
-        rotator = hardwareMap.get(Servo.class, "rotator");
-        grabber = hardwareMap.get(CRServo.class, "grabber");
-
-        leftPlatform = hardwareMap.get(Servo.class, "leftPlatform");
-        rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
-
-        lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
-
-
-        telemetry.addData("Status:", "Running");
-        telemetry.update();
-
-        //set zero power behavior to brake stops the motors from moving at the beginning
-        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        //stop and reset encoder sets the values back to zero upon restarting the robot (or is it initialization? i forget)
-        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        //instructs the motor to send encoder values
-        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
-
-
-
-        leftPlatform.setDirection(Servo.Direction.REVERSE);
-        rightPlatform.setDirection(Servo.Direction.FORWARD);
-
-        telemetry.update();
-
-        //grabber.setPosition(1);
-        leftPlatform.setPosition(0.4);
-        rightPlatform.setPosition(0.4);
-
-
         waitForStart();
 
-        //am also not sure what this does, but it was in the sample code lolol
-        //am guessing that it serves a similar purpose to intiializing the robot? don't quote me because i don't actually know :/
-        skyStones.activate();
+
+        strafePID(1.0,true);
 
 
-        /**
-         * actual movement code: the values for PLATFORM BLUE are all correct
-         * goes BACKWARDS (since is positioned facing drivers)
-         * then strafes to the RIGHT towards the plate
-         * goes forawrd a tiny bit more and bumps the platform
-         * bring servos down, pause
-         * pull in platform, pause
-         *      NOTE: HAVE TO ADD A SLIGHT TURN TO ENSURE PLATFORM LOCATION LATER, BUT DON'T HAVE ENCODER VALUES FOR THAT.
-         * bring servos back up
-         * strafe out (left) LATER THIS MAY BE DIFFERENT
-         */
-        moveStraight(1.8, false);
-        //moveStrafe(.4,true);
-        //moveStraight(0.7,false);
-        leftPlatform.setPosition((0.07));
-        rightPlatform.setPosition(0.07);
+        while(opModeIsActive()) {
+            /**
+             - start on skystone side
+             - move forward 1.3 or so tiles, then do lift sequence detect;
+             - if not detected, strafe and continue detecting until the third stone
+             - default to picking up the third stone
+             - pickup sequence:
+             - lift some number of counts
+             - extend until limit switch rees
+             - rotate 90
+             - bring down:
+             - bring down, grab
+             - move backwards (hover)
+             - turn, strafe to right a bit, enough to clear other robot on platform side but not too much to hit skybridge
+             - go forward 3 tiles plus however much was strafed to the right
+             - turn right, go forward; lift up a bit, lift up a bit more
+             - latch and let go, sleep
+             - go backwards some then turn left and go forward to push platform
 
-        sleep(1000); //delay designed to prevent the robot from moving away AS THE SERVOS COME DOWN (which happened)
-        //moveStrafe(0.5, false);
-        moveStraight(1.7, true);
-        sleep(500);
+             */
 
-        turn(110,5000, true);
-        moveStraight(1.6, false);
-        leftPlatform.setPosition(0.4);
-        rightPlatform.setPosition(0.4);
-        sleep(500);
-        moveStrafe(0.5, true);
 
-        lift(1, true);
-        extender.setPower(1);
-        sleep(3000);
-        extender.setPower(0);
+        }
 
-        lift(20,false);
 
-        moveStraight(2, true);
     }
 
     public void moveStraight(double tiles, boolean forward){ //tileval is encoder val for one tile
@@ -270,7 +185,7 @@ public class PlatformAuton_Blue extends LinearOpMode {
         //straight line motion forwards nad backwards, uses frontLft and ackRight
         //USE FRONT RIGHT AND BACK LEFT VALUES FOR STRAFING (trials averaged for a tile strafing right)
 
-        double tilesWithTolerance = (tiles * forwardTarget) - 10;
+        double tilesWithTolerance = (tiles * forwardTarget);
         int direction = 1;
         if(!forward){
             direction = -1;
@@ -280,14 +195,30 @@ public class PlatformAuton_Blue extends LinearOpMode {
                 *.0004 + .03;
         //grabber: from zero to one
 
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        //instructs the motor to send encoder values
+        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         while (opModeIsActive() &&
                 (Math.abs(frontLeft.getCurrentPosition()) <= tilesWithTolerance)
                 && (Math.abs(backRight.getCurrentPosition()) <= tilesWithTolerance)) {
-            frontLeft.setPower(incrementedPower);
+            /*frontLeft.setPower(incrementedPower);
             backLeft.setPower(incrementedPower);
             frontRight.setPower(-incrementedPower);
-            backRight.setPower(-incrementedPower);
+            backRight.setPower(-incrementedPower);*/
 
+            double speed = direction * 0.4;
+            frontLeft.setPower(speed);
+            backLeft.setPower(speed);
+            frontRight.setPower(-speed);
+            backRight.setPower(-speed);
 
             //shows power values
             telemetry.addData("FORWARD", "");
@@ -312,16 +243,99 @@ public class PlatformAuton_Blue extends LinearOpMode {
         frontRight.setPower(0);
         backRight.setPower(0);
 
+
+
+    }
+
+    public void strafePID(double tiles, boolean right) {
+
+        double dir = right ? 1 : -1;
+        double setpoint = tiles * strafeTarget * dir;
+
         frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        //instructs the motor to send encoder values
         frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        double kP = 0.01;
+        double kI = 0.0;
+        double kD = 0.1;
+
+        //FL, FR, BL, BR -> 1, 2, 3, 4
+
+        double u1 = 0;
+        double u2 = 0;
+        double u3 = 0;
+        double u4 = 0;
+
+        double e1 = 0;
+        double e2 = 0;
+        double e3 = 0;
+        double e4 = 0;
+
+        double int1 = 0;
+        double int2 = 0;
+        double int3 = 0;
+        double int4 = 0;
+
+        double initTime = System.currentTimeMillis();
+
+        double lastE1 = -setpoint - frontLeft.getCurrentPosition();
+        double lastE2 = -setpoint - frontRight.getCurrentPosition();
+        double lastE3 = setpoint - backLeft.getCurrentPosition();
+        double lastE4 = setpoint - backRight.getCurrentPosition();
+
+        double time = initTime;
+        double lastTime = initTime;
+
+        while(opModeIsActive() && (System.currentTimeMillis() - initTime < 10000)) {
+
+            e1 = -setpoint - frontLeft.getCurrentPosition();
+            e2 = -setpoint - frontRight.getCurrentPosition();
+            e3 = setpoint - backLeft.getCurrentPosition();
+            e4 = setpoint - backRight.getCurrentPosition();
+
+            time = System.currentTimeMillis();
+
+            int1 += e1 * (time - lastTime);
+            int2 += e2 * (time - lastTime);
+            int3 += e3 * (time - lastTime);
+            int4 += e4 * (time - lastTime);
+
+            u1 = (kP * e1) + (kI * int1) + (kD * ((e1 - lastE1) / (time - lastTime)));
+            u2 = (kP * e2) + (kI * int2) + (kD * ((e2 - lastE2) / (time - lastTime)));
+            u3 = (kP * e3) + (kI * int3) + (kD * ((e3 - lastE3) / (time - lastTime)));
+            u4 = (kP * e4) + (kI * int4) + (kD * ((e4 - lastE4) / (time - lastTime)));
+
+            frontLeft.setPower(u1);
+            frontRight.setPower(u2);
+            backLeft.setPower(u3);
+            backRight.setPower(u4);
+
+            lastE1 = e1;
+            lastE2 = e2;
+            lastE3 = e3;
+            lastE4 = e4;
+
+            lastTime = time;
+
+            telemetry.addData("Front Left:", frontLeft.getCurrentPosition());
+            telemetry.addData("Front Right:", frontRight.getCurrentPosition());
+            telemetry.addData("Back Left:", backLeft.getCurrentPosition());
+            telemetry.addData("Back Right:", backRight.getCurrentPosition());
+            telemetry.update();
+
+        }
+
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
 
     }
 
@@ -339,16 +353,32 @@ public class PlatformAuton_Blue extends LinearOpMode {
 
         double incrementedPower = dir * (strafeTarget -
                 (x.getCurrentPosition() + y.getCurrentPosition()) / 2)
-                *.0003 + .03;
+                *.00025 + .03;
+
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        //instructs the motor to send encoder values
+        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
         while (opModeIsActive() &&
                 (Math.abs(x.getCurrentPosition()) <= tilesWithTolerance)
                 && (Math.abs(y.getCurrentPosition()) <= tilesWithTolerance)) {
-            frontLeft.setPower(incrementedPower);
+           /* frontLeft.setPower(incrementedPower);
             backLeft.setPower(-incrementedPower);
             frontRight.setPower(incrementedPower);
-            backRight.setPower(-incrementedPower);
+            backRight.setPower(-incrementedPower);*/
+            double speed = dir * 0.8;
+            frontLeft.setPower(speed);
+            backLeft.setPower(-speed);
+            frontRight.setPower(speed + (dir * 0.1));
+            backRight.setPower(-speed + (dir * 0.1));
 
 
             //shows power values
@@ -366,6 +396,9 @@ public class PlatformAuton_Blue extends LinearOpMode {
             telemetry.addData("Front Right:", frontRight.getCurrentPosition());
             telemetry.addData("Back Left:", backLeft.getCurrentPosition());
             telemetry.addData("Back Right:", backRight.getCurrentPosition());
+
+            telemetry.addData("---------------------------------------", "");
+            telemetry.addData("lifter: ", lifter.getCurrentPosition());
             telemetry.update();
 
         }
@@ -373,6 +406,24 @@ public class PlatformAuton_Blue extends LinearOpMode {
         backLeft.setPower(0);
         frontRight.setPower(0);
         backRight.setPower(0);
+
+    }
+
+    public void turn(double degrees, boolean counterclockwise){ //tileval is encoder val for one tile
+        int dir = 1;
+        if(!counterclockwise){
+            dir = -1; //ccw = all negative
+        }
+        //straight line motion forwards nad backwards, uses frontLft and ackRight
+        //USE FRONT RIGHT AND BACK LEFT VALUES FOR STRAFING (trials averaged for a tile strafing right)
+        DcMotor x = frontRight;
+        DcMotor y = backLeft;
+        double percentTurn = degrees / 360;
+        double encoderTurnWithTolerance = (percentTurn * turnTarget) - 10;
+
+        double incrementedPower = dir * (strafeTarget -
+                (x.getCurrentPosition() + y.getCurrentPosition()) *.5) //slightly sus, fixed
+                *.0003 + .03;
 
         frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -384,25 +435,6 @@ public class PlatformAuton_Blue extends LinearOpMode {
         frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-    }
-
-    public void turn(double degrees, double turnDistance, boolean counterclockwise){ //tileval is encoder val for one tile
-        int dir = 1;
-        if(!counterclockwise){
-            dir = -1; //ccw = all negative
-        }
-        //straight line motion forwards nad backwards, uses frontLft and ackRight
-        //USE FRONT RIGHT AND BACK LEFT VALUES FOR STRAFING (trials averaged for a tile strafing right)
-        DcMotor x = frontRight;
-        DcMotor y = backLeft;
-        double percentTurn = degrees / 360;
-        double encoderTurnWithTolerance = (percentTurn * turnDistance) - 10;
-
-        double incrementedPower = dir * (strafeTarget -
-                (x.getCurrentPosition() + y.getCurrentPosition()) *.5) //slightly sus, fixed
-                *.0003 + .03;
-
 
         while (opModeIsActive() &&
                 (Math.abs(x.getCurrentPosition()) <= encoderTurnWithTolerance)
@@ -436,16 +468,6 @@ public class PlatformAuton_Blue extends LinearOpMode {
         frontRight.setPower(0);
         backRight.setPower(0);
 
-        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        //instructs the motor to send encoder values
-        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -459,7 +481,7 @@ public class PlatformAuton_Blue extends LinearOpMode {
         if(up){
             dir = -1;
         }
-        while(opModeIsActive() && Math.abs(lifter.getCurrentPosition()) < liftTarget && lifterSwitch.getState()){
+        while(opModeIsActive() && Math.abs(lifter.getCurrentPosition()) < liftTarget && (lifterSwitch.getState() || up)){
             lifter.setPower(dir * 0.4);
         }
         lifter.setPower(0);
@@ -467,4 +489,5 @@ public class PlatformAuton_Blue extends LinearOpMode {
         lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
+
 }
