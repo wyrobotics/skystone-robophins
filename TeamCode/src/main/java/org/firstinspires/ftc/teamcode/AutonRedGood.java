@@ -23,7 +23,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
-public class AutonAngle extends LinearOpMode {
+import static org.firstinspires.ftc.teamcode.PIDConstants.Kd;
+import static org.firstinspires.ftc.teamcode.PIDConstants.Ki;
+import static org.firstinspires.ftc.teamcode.PIDConstants.Kp;
+
+@Autonomous
+public class AutonRedGood extends LinearOpMode {
 
     private DcMotor frontRight;
     private DcMotor frontLeft;
@@ -41,6 +46,8 @@ public class AutonAngle extends LinearOpMode {
 
     private DigitalChannel extenderSwitch;
     private DigitalChannel lifterSwitch;
+
+    private DcMotor shooter;
 
     BNO055IMU imu;
     Orientation lastAngles = new Orientation();
@@ -82,6 +89,10 @@ public class AutonAngle extends LinearOpMode {
 
         extenderSwitch = hardwareMap.get(DigitalChannel.class, "extenderLimitSwitch");
         lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
+
+        shooter = hardwareMap.get(DcMotor.class, "shooter");
+
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         frontLeft.setDirection(DcMotor.Direction.REVERSE);
         frontRight.setDirection(DcMotor.Direction.REVERSE);
@@ -191,14 +202,160 @@ public class AutonAngle extends LinearOpMode {
         skyStones.activate();
         waitForStart();
 
-        turn(45,true);
+        while(opModeIsActive()){
+            rightPlatform.setPosition(0.175);
+            leftPlatform.setPosition(0.175);
 
-        sleep(1000);
 
-        turnAngle(270,true, 7);
+            moveStraight(1.22, true, 0.4);
+
+
+            int strafeDistance = 0;
+
+            long detectionSleep = 350;
+            sleep(500);
+
+            /*
+             *
+             - block one: detect and strafe left
+             - block two: right, detect, left
+             - block three: right right
+
+
+             check whether is visible each time before hand:
+             depending on which block, run a specific sequence of events
+             */
+
+            if(skyStoneFinder.isVisible()){
+                //strafe counter will always be zero here
+                moveStrafe(.25, true);
+            } else{
+                strafeDistance += 1;
+                moveStrafe(.333, true);
+                sleep(detectionSleep);
+                if(skyStoneFinder.isVisible()){
+                    moveStrafe(.3, true);
+                } else{
+                    strafeDistance += 1;
+                    //moveStrafe(.1, true);
+                }
+            }
+
+            moveStraight(.08, true, .4);
+
+
+
+
+
+            /**Can change to implement turnAngle or PID or something
+             turn(6 * strafeDistance - 1, true);
+             moveStraight(0.1 + strafeDistance * .07 + (strafeDistance == 2 ? 0.07 : 0), true, 0.4);
+             **/
+
+            /**
+             * now bring block over
+             */
+
+
+            lift(liftTarget, true); //move up to go over blocc
+
+
+            long startTime = System.currentTimeMillis();
+            while (opModeIsActive() && extenderSwitch.getState() && ((System.currentTimeMillis() - startTime) < 2500)) {
+                extender.setPower(1.0);
+            }
+
+            //   telemetry.addData("start time: ", startTime);
+            // telemetry.addData("runtine: ", System.currentTimeMillis());
+            //telemetry.update();
+
+            extender.setPower(0); //stop.
+
+            rotator.setPosition(1); // should set to the right one
+
+
+            grabber.setPower(-1);
+            sleep(1200);
+            grabber.setPower(0);
+            //sleep(300);
+
+
+            lift(liftTarget, false); // move down to grab
+
+            //reset platform pullers
+            rightPlatform.setPosition(0.6);
+            leftPlatform.setPosition(0.6);
+            grabber.setPower(1);
+            sleep(3000);
+            grabber.setPower(0);
+
+            //moving under bridge sequence
+            extender.setPower(-1);
+            moveStraight(.20, false, 0.4); //old val .3, then .15
+            extender.setPower(0);
+            //maybe short lift sequence here
+            rotator.setPosition(0.5);
+            sleep(200);
+
+            //Turns differently with a blocc, has to be slightly less than 90- was 85
+
+            //now implementing turnangle, possibly no longer necessary
+            //Should PID this
+            turnAngle(90, true, 5);
+
+
+            //move straight some percentage of a tile to compensate for the strafing at the beginning plus three tiles
+
+            moveStraight(3.3 + (strafeDistance*.33) - (strafeDistance == 0 ? 0.2 : 0), true, 0.45);
+
+            lift(liftTarget, true);
+            turn(90, false);
+            //  turnAngle(0, false, 5);
+            //old     moveStraight(.8, true, .4);
+
+            moveStraight(.5, true, .4);
+
+            rightPlatform.setPosition(0.175);
+            leftPlatform.setPosition(0.175);
+            //bring lifter down later
+            // lift(liftTarget - 200, false);
+            extender.setPower(1);
+            sleep(500);
+            extender.setPower(0);
+            grabber.setPower(-1);
+            sleep(500);
+            /**    grabber.setPower(0);
+
+             //platform pulling sequence minus putting pullers down (done during grabber sleep sequence
+
+             moveStraight(1.3, false, .4);    these are old
+             turn(135, true);
+             */
+            moveStraight(1.5,false, .4);
+
+            grabber.setPower(0);
+
+            // turnAngle(90,true, 5);
+            turn(270, true);
+
+            moveStraight(.3, true, .4);
+
+            rightPlatform.setPosition(0.6);
+            leftPlatform.setPosition(0.6);
+            //bring lifter down later
+
+            shooter.setPower(1);
+            sleep(800);
+            shooter.setPower(0);
+
+            break;
+        }
+
 
 
     }
+
+    //2: 2, 3: 3, 5: 3, 7:
 
     public void moveStraight(double tiles, boolean forward, double speed){ //tileval is encoder val for one tile
 
@@ -272,7 +429,7 @@ public class AutonAngle extends LinearOpMode {
     // strafe defaulted to the right direction, negfative for left
     public void moveStrafe(double tiles, boolean right){ //tileval is encoder val for one tile
         int dir = 1;
-        if(!right){
+        if(right){
             dir = -1;
         }
         //straight line motion forwards nad backwards, uses frontLft and ackRight
@@ -345,7 +502,7 @@ public class AutonAngle extends LinearOpMode {
 
     public void turn(double degrees, boolean counterclockwise){ //tileval is encoder val for one tile
         int dir = 1;
-        if(!counterclockwise){
+        if(counterclockwise){
             dir = -1; //ccw = all negative
         }
         //straight line motion forwards nad backwards, uses frontLft and ackRight
@@ -377,6 +534,69 @@ public class AutonAngle extends LinearOpMode {
             backLeft.setPower(-incrementedPower);
             frontRight.setPower(-incrementedPower);
             backRight.setPower(-incrementedPower);
+
+
+            //shows power values
+            telemetry.addData("STRAFE", "");
+            telemetry.addData("-----POWER------", "");
+            telemetry.addData("Front Left:", frontLeft.getPower());
+            telemetry.addData("Front Right:", frontRight.getPower());
+            telemetry.addData("Back Left:", backLeft.getPower());
+            telemetry.addData("Back Right:", backRight.getPower());
+
+            //shows encoder position values (this is how you find your values for auton)
+            //getCurrentPosition() specifically does that as per the name :s
+            telemetry.addData("-----ENCODERS------", "");
+            telemetry.addData("Front Left:", frontLeft.getCurrentPosition());
+            telemetry.addData("Front Right:", frontRight.getCurrentPosition());
+            telemetry.addData("Back Left:", backLeft.getCurrentPosition());
+            telemetry.addData("Back Right:", backRight.getCurrentPosition());
+            telemetry.update();
+
+        }
+        frontLeft.setPower(0);
+        backLeft.setPower(0);
+        frontRight.setPower(0);
+        backRight.setPower(0);
+
+
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+    }
+
+    public void turnJank(double degrees, boolean counterclockwise, double speed){ //tileval is encoder val for one tile
+        int dir = 1;
+        if(counterclockwise){
+            dir = -1; //ccw = all negative
+        }
+        //straight line motion forwards nad backwards, uses frontLft and ackRight
+        //USE FRONT RIGHT AND BACK LEFT VALUES FOR STRAFING (trials averaged for a tile strafing right)
+        DcMotor x = frontRight;
+        DcMotor y = backLeft;
+        double percentTurn = degrees / 360;
+        double encoderTurnWithTolerance = (percentTurn * turnTarget) - 10;
+
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        //instructs the motor to send encoder values
+        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        while (opModeIsActive() &&
+                (Math.abs(x.getCurrentPosition()) <= encoderTurnWithTolerance)
+                && (Math.abs(y.getCurrentPosition()) <= encoderTurnWithTolerance)) {
+            frontLeft.setPower(-speed * dir);
+            backLeft.setPower(-speed * dir);
+            frontRight.setPower(-speed * dir);
+            backRight.setPower(-speed * dir);
 
 
             //shows power values
@@ -456,7 +676,58 @@ public class AutonAngle extends LinearOpMode {
 
     public void turnAngle(double angle, boolean counterclockwise, double error) {
 
-        turn(startAngle + angle - getAngle() - error, counterclockwise);
+        turn(startAngle + angle - getAngle() + error, counterclockwise);
+
+    }
+
+    private double error(double targetPosition) {
+        return targetPosition - getAngle();
+    }
+
+    private void turnPID(double target, boolean ccw) {
+
+        double dir = ccw ? -1 : 1;
+
+        double lastError = error(target);
+        double lastTime = System.currentTimeMillis();
+        double initTime = lastTime;
+
+        double proportionTerm;
+        double derivativeTerm;
+        double integralTerm = 0;
+
+        double u = 0;
+
+        while(opModeIsActive() && Math.abs(error(target)) > 1 && System.currentTimeMillis() - initTime < 10000) {
+            double error = error(target);
+            double time = System.currentTimeMillis();
+            proportionTerm = Kp * error;
+            derivativeTerm = Kd * ((error - lastError) / Math.abs((lastTime - time)));
+            integralTerm += Ki * error * Math.abs((lastTime - time));
+
+            u = proportionTerm + integralTerm + derivativeTerm;
+
+            frontLeft.setPower(-u * dir);
+            frontRight.setPower(-u * dir);
+            backLeft.setPower(-u * dir);
+            backRight.setPower(-u * dir);
+
+            telemetry.addData("error: ", lastError);
+            telemetry.addData("front left: ", frontLeft.getPower());
+            telemetry.addData("frontRight: ", frontRight.getPower());
+            telemetry.addData("back left: ", backLeft.getPower());
+            telemetry.addData("back right: ", backRight.getPower());
+
+            telemetry.update();
+
+            lastError = error;
+            lastTime = time;
+        }
+
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
 
     }
 

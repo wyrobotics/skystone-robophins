@@ -66,7 +66,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained in {@link ConceptVuforiaNavigation}.
  */
-@Autonomous
 public class TurnAuton_Blue extends LinearOpMode {
     /**note: most of this stuff is from sample code not me bc smol brain but it works so ya know
      * also note that the sample code was written with relic recovery from 2yrs ago in mind

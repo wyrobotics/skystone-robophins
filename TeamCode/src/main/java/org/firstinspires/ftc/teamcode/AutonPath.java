@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 /**
  * THIS AUTONPATH TEST IS WRITTEN FOR BLUE, BACK POSITION.
  */
-@Autonomous
 @Disabled
 public class AutonPath extends LinearOpMode {
     VuforiaTest detector;

@@ -23,7 +23,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
-public class AutonAngle extends LinearOpMode {
+import static org.firstinspires.ftc.teamcode.PIDConstants.Kd;
+import static org.firstinspires.ftc.teamcode.PIDConstants.Ki;
+import static org.firstinspires.ftc.teamcode.PIDConstants.Kp;
+import static org.firstinspires.ftc.teamcode.PIDConstants.timeout;
+
+public class AutonBluePIDTest extends LinearOpMode {
 
     private DcMotor frontRight;
     private DcMotor frontLeft;
@@ -191,14 +196,24 @@ public class AutonAngle extends LinearOpMode {
         skyStones.activate();
         waitForStart();
 
-        turn(45,true);
+        if(opModeIsActive()){
 
-        sleep(1000);
+            double ogAngle = getAngle();
 
-        turnAngle(270,true, 7);
+            turnPID(90,true);
+
+            telemetry.addData("Final angle: ", getAngle());
+            telemetry.addData("Start angle: ", ogAngle);
+            telemetry.update();
+
+            sleep(30000);
+
+        }
 
 
     }
+
+    //2: 2, 3: 3, 5: 3, 7:
 
     public void moveStraight(double tiles, boolean forward, double speed){ //tileval is encoder val for one tile
 
@@ -457,6 +472,57 @@ public class AutonAngle extends LinearOpMode {
     public void turnAngle(double angle, boolean counterclockwise, double error) {
 
         turn(startAngle + angle - getAngle() - error, counterclockwise);
+
+    }
+
+    private double error(double targetPosition) {
+        return targetPosition - getAngle();
+    }
+
+    private void turnPID(double target, boolean ccw) {
+
+        double dir = ccw ? 1 : -1;
+
+        double lastError = error(target);
+        double lastTime = System.currentTimeMillis();
+        double initTime = lastTime;
+
+        double proportionTerm;
+        double derivativeTerm;
+        double integralTerm = 0;
+
+        double u = 0;
+
+        while(opModeIsActive() && Math.abs(error(target)) > 1 && System.currentTimeMillis() - initTime < timeout) {
+            double error = error(target);
+            double time = System.currentTimeMillis();
+            proportionTerm = Kp * error;
+            derivativeTerm = Kd * ((error - lastError) / Math.abs((lastTime - time)));
+            integralTerm += Ki * error * Math.abs((lastTime - time));
+
+            u = proportionTerm + integralTerm + derivativeTerm;
+
+            frontLeft.setPower(-u * dir);
+            frontRight.setPower(-u * dir);
+            backLeft.setPower(-u * dir);
+            backRight.setPower(-u * dir);
+
+            telemetry.addData("error: ", lastError);
+            telemetry.addData("front left: ", frontLeft.getPower());
+            telemetry.addData("frontRight: ", frontRight.getPower());
+            telemetry.addData("back left: ", backLeft.getPower());
+            telemetry.addData("back right: ", backRight.getPower());
+
+            telemetry.update();
+
+            lastError = error;
+            lastTime = time;
+        }
+
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
 
     }
 

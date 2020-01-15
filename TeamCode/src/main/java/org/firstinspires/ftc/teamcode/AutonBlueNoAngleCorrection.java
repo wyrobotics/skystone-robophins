@@ -23,7 +23,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
-@Autonomous
 public class AutonBlueNoAngleCorrection extends LinearOpMode {
 
     private DcMotor frontRight;

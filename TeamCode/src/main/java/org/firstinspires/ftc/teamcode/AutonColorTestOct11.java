@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 
 @Disabled
-@Autonomous
 public class AutonColorTestOct11 extends LinearOpMode {
     private DcMotor frontLeft;
     private DcMotor frontRight;
