@@ -15,10 +15,7 @@ import java.lang.Math;
 public class QuadrilateralMode extends LinearOpMode {
 
     //Drivebase motors
-    private DcMotor frontLeft;
-    private DcMotor frontRight;
-    private DcMotor backLeft;
-    private DcMotor backRight;
+    private DriveBase driveBase;
 
     //Arm/hand stuff
     private DcMotor lifter;
@@ -66,10 +63,7 @@ public class QuadrilateralMode extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
-        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
-        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
-        backRight = hardwareMap.get(DcMotor.class, "backRight");
+        driveBase = new DriveBase(hardwareMap, telemetry, 0.7);
 
         lifter = hardwareMap.get(DcMotor.class, "lifter");
         extender = hardwareMap.get(CRServo.class, "extender");
@@ -85,26 +79,6 @@ public class QuadrilateralMode extends LinearOpMode {
         shooter = hardwareMap.get(DcMotor.class, "shooter");
 
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        frontLeft.setDirection(DcMotor.Direction.REVERSE);
-        frontRight.setDirection(DcMotor.Direction.FORWARD);
-        backLeft.setDirection(DcMotor.Direction.REVERSE);
-        backRight.setDirection(DcMotor.Direction.FORWARD);
-
-        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftPlatform.setDirection(Servo.Direction.REVERSE);
         rightPlatform.setDirection(Servo.Direction.FORWARD);
@@ -166,10 +140,12 @@ public class QuadrilateralMode extends LinearOpMode {
 
             double rotationScaler = 1 + Math.abs(this.gamepad1.right_stick_x);
 
-            frontLeft.setPower(0.7 * (longSquare[0] + this.gamepad1.right_stick_x)/rotationScaler);
-            frontRight.setPower(0.7 * (longSquare[1] - this.gamepad1.right_stick_x)/rotationScaler);
-            backLeft.setPower(0.7 * (longSquare[1] + this.gamepad1.right_stick_x)/rotationScaler);
-            backRight.setPower(0.7 * (longSquare[0] - this.gamepad1.right_stick_x)/rotationScaler);
+            double frontLeft = (0.7 * (longSquare[0] + this.gamepad1.right_stick_x)/rotationScaler);
+            double frontRight = (0.7 * (longSquare[1] - this.gamepad1.right_stick_x)/rotationScaler);
+            double backLeft = (0.7 * (longSquare[1] + this.gamepad1.right_stick_x)/rotationScaler);
+            double backRight = (0.7 * (longSquare[0] - this.gamepad1.right_stick_x)/rotationScaler);
+
+            driveBase.setMotorPowers(frontLeft, frontRight, backLeft, backRight);
 
             if(!(!aPressed ^ this.gamepad1.x)) {
                 aPressed = !aPressed;
@@ -272,15 +248,6 @@ public class QuadrilateralMode extends LinearOpMode {
                 shooter.setPower(0);
             }
 
-
-            telemetry.addData("Front Left: ", frontLeft.getCurrentPosition());
-            telemetry.addData("Front Right: ", frontRight.getCurrentPosition());
-            telemetry.addData("Back Left: ", backLeft.getCurrentPosition());
-            telemetry.addData("Back Right: ", backRight.getCurrentPosition());
-            telemetry.addData("","");
-            telemetry.addData("FL power: ", frontLeft.getPower());
-            telemetry.addData("FR power: ", frontRight.getPower());
-            telemetry.update();
         }
 
     }
