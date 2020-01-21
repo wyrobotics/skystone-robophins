@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorService;
 
 public class OdometryTracker {
 
-    private ExecutorService odometryUpdaterExecutor = ThreadPool.newSingleThreadExecutor("Odometry Updater");
+    private ExecutorService odometryUpdaterExecutor;
     private Boolean continueExecution = true;
 
     private DcMotor leftEncoder;
@@ -26,17 +26,27 @@ public class OdometryTracker {
 
     private Telemetry telemetry;
 
-    private double xPos;
-    private double yPos;
-    private double theta;
+    private double xPos = 0;
+    private double yPos = 0;
+    private double theta = 0;
 
+    //Dummy values right now, determine both experimentally
     private double podDistance = 17;
+    private double countsPerInch = 1250;
 
     public OdometryTracker(HardwareMap hardwareMap, Telemetry telemetry) {
 
         leftEncoder = hardwareMap.get(DcMotor.class, "leftEncoder");
         rightEncoder = hardwareMap.get(DcMotor.class, "rightEncoder");
-        normalEncoder = hardwareMap.get(DcMotor.class, "normalEncoder");
+        normalEncoder = hardwareMap.get(DcMotor.class, "shooter");
+
+        leftEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        normalEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        normalEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         this.telemetry = telemetry;
 
@@ -44,9 +54,9 @@ public class OdometryTracker {
 
     private void updatePosition() {
 
-        double l = leftEncoder.getCurrentPosition(),
-                r = rightEncoder.getCurrentPosition(),
-                n = normalEncoder.getCurrentPosition();
+        double l = leftEncoder.getCurrentPosition() / countsPerInch,
+                r = rightEncoder.getCurrentPosition() / countsPerInch,
+                n = normalEncoder.getCurrentPosition() / countsPerInch;
 
         double deltaL = l - leftValue,
                 deltaR = r - rightValue,
@@ -61,24 +71,36 @@ public class OdometryTracker {
 
         theta += (deltaR - deltaF) / podDistance;
 
+        leftValue = l;
+        rightValue = r;
+        normalValue = n;
+
     }
 
     private Runnable odometryUpdaterRunnable = new Runnable() {
         @Override
         public void run() {
-            while(continueExecution) {
+            continueExecution = true;
+
+            leftValue = leftEncoder.getCurrentPosition() / countsPerInch;
+            rightValue = rightEncoder.getCurrentPosition() / countsPerInch;
+            normalValue = normalEncoder.getCurrentPosition() / countsPerInch;
+
+            while (continueExecution && !Thread.currentThread().isInterrupted()) {
                 updatePosition();
             }
         }
     };
 
     public void startOdometry() {
+        odometryUpdaterExecutor = ThreadPool.newSingleThreadExecutor("Odometry Updater");
         odometryUpdaterExecutor.execute(odometryUpdaterRunnable);
     }
 
     public void shutdownOdometry() {
         continueExecution = false;
-        odometryUpdaterExecutor.shutdown();
+        odometryUpdaterExecutor.shutdownNow();
+        odometryUpdaterExecutor = null;
     }
 
     public double[] getPosition() {

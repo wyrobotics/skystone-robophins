@@ -12,8 +12,10 @@ public class MainRobot {
 
     public DriveBase driveBase;
 
-    public DcMotor lifter;
-    public CRServo extender;
+    public OdometryTracker odometryTracker;
+
+    private DcMotor lifter;
+    private CRServo extender;
 
     private Servo rotator;
     private CRServo grabber;
@@ -21,43 +23,16 @@ public class MainRobot {
     private Servo leftPlatform;
     private Servo rightPlatform;
 
-    private Servo leftSlapper;
-    private Servo rightSlapper;
-
     private DigitalChannel extenderSwitch;
     private DigitalChannel lifterSwitch;
+
+    private DcMotor shooter;
 
     public MainRobot(HardwareMap hardwareMap, Telemetry telemetry, double speed) {
 
         driveBase = new DriveBase(hardwareMap, telemetry, speed);
 
-        lifter = hardwareMap.get(DcMotor.class, "lifter");
-        extender = hardwareMap.get(CRServo.class, "extender");
-
-        rotator = hardwareMap.get(Servo.class, "rotator");
-        grabber = hardwareMap.get(CRServo.class, "grabber");
-
-        leftPlatform = hardwareMap.get(Servo.class, "leftPlatform");
-        rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
-
-        leftSlapper = hardwareMap.get(Servo.class, "leftSlapper");
-        rightSlapper = hardwareMap.get(Servo.class, "rightSlapper");
-
-        extenderSwitch = hardwareMap.get(DigitalChannel.class, "extenderLimitSwitch");
-        lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
-
-        leftPlatform.setDirection(Servo.Direction.REVERSE);
-        rightPlatform.setDirection(Servo.Direction.FORWARD);
-
-        lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        rotator.setPosition(0.5);
-
-    }
-
-    public MainRobot(HardwareMap hardwareMap, Telemetry telemetry) {
-
-        driveBase = new DriveBase(hardwareMap, telemetry);
+        odometryTracker = new OdometryTracker(hardwareMap, telemetry);
 
         lifter = hardwareMap.get(DcMotor.class, "lifter");
         extender = hardwareMap.get(CRServo.class, "extender");
@@ -68,30 +43,27 @@ public class MainRobot {
         leftPlatform = hardwareMap.get(Servo.class, "leftPlatform");
         rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
 
-        leftSlapper = hardwareMap.get(Servo.class, "leftSlapper");
-        rightSlapper = hardwareMap.get(Servo.class, "rightSlapper");
-
         extenderSwitch = hardwareMap.get(DigitalChannel.class, "extenderLimitSwitch");
         lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
+
+        shooter = hardwareMap.get(DcMotor.class, "shooter");
 
         leftPlatform.setDirection(Servo.Direction.REVERSE);
         rightPlatform.setDirection(Servo.Direction.FORWARD);
 
         lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         rotator.setPosition(0.5);
 
     }
-
-
-
-
 
     public void lift(double power) {
         if(lifterSwitch.getState()) {
             lifter.setPower(power);
         } else {
-            lifter.setPower(1);
+            lifter.setPower(Math.min(0,-power));
         }
     }
 
@@ -99,7 +71,7 @@ public class MainRobot {
         if(extenderSwitch.getState()) {
             extender.setPower(power);
         } else {
-            extender.setPower(Math.min(0,power));
+            extender.setPower(Math.max(0,power));
         }
     }
 
@@ -110,9 +82,18 @@ public class MainRobot {
     public void rotate(double pos) {
         rotator.setPosition(pos);
     }
+    public void rotate(double inc, boolean ccw) { rotator.setPosition(rotator.getPosition() + ((ccw ? 1 : -1) * inc)); }
 
-    public void rotate(double inc, boolean ccw) {
-        rotator.setPosition(rotator.getPosition() + ((ccw ? 1 : -1) * inc));
+    public void shoot(double power) { shooter.setPower(power); }
+
+    public void grabPlatform() {
+        leftPlatform.setPosition(0.175);
+        rightPlatform.setPosition(0.175);
+    }
+
+    public void releasePlatform() {
+        leftPlatform.setPosition(0.6);
+        rightPlatform.setPosition(0.6);
     }
 
 
