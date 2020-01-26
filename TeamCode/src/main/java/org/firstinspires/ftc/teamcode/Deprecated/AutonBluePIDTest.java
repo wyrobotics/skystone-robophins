@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Deprecated;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -12,13 +11,22 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuMarkInstanceId;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
-public class AutonBlueAlmostGoodVuforia extends LinearOpMode {
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.Kd;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.Ki;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.Kp;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.timeout;
+
+public class AutonBluePIDTest extends LinearOpMode {
 
     private DcMotor frontRight;
     private DcMotor frontLeft;
@@ -37,11 +45,17 @@ public class AutonBlueAlmostGoodVuforia extends LinearOpMode {
     private DigitalChannel extenderSwitch;
     private DigitalChannel lifterSwitch;
 
+    BNO055IMU imu;
+    Orientation lastAngles = new Orientation();
+    double globalAngle;
+
     private double strafeTarget = 950;
     private double forwardTarget = 520; //experimental: 2178, but rolls
     private double liftTarget = 850; //NEED VALUE FOR THIS
     private double turnTarget = 2150;
     private double bridgeHeight = 270; // NEED REAL VALUE THIS IS BOTH BRDGEHEGHT AND MOVING ALL THE WAY DOWN
+
+    private double startAngle;
 
     public static final String TAG = "Vuforia VuMark Sample";
 
@@ -99,6 +113,25 @@ public class AutonBlueAlmostGoodVuforia extends LinearOpMode {
         lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         rotator.setPosition(0.5);
+
+
+        BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
+
+        parametersIMU.mode = BNO055IMU.SensorMode.IMU;
+        parametersIMU.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parametersIMU.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parametersIMU.loggingEnabled = false;
+
+
+
+        // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
+        // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
+        // and named "imu".
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+
+        imu.initialize(parametersIMU);
+
+        startAngle = getAngle();
 
         rightPlatform.setPosition(0.6);
         leftPlatform.setPosition(0.6);
@@ -161,124 +194,24 @@ public class AutonBlueAlmostGoodVuforia extends LinearOpMode {
         skyStones.activate();
         waitForStart();
 
-        while(opModeIsActive()) {
+        if(opModeIsActive()){
 
-            rightPlatform.setPosition(0.175);
-            leftPlatform.setPosition(0.175);
+            double ogAngle = getAngle();
 
+            turnPID(90,true);
 
-            moveStraight(1.1, true, 0.4);
-
-
-            int strafeCounter = 0;
-            int strafedistance = 0;
-
-            boolean found = false;
-            long detectionSleep = 250;
-            sleep(350);
-
-            while (strafeCounter < 2) { //&& !skyStoneFinder.isVisible()){
-                //found = skyStoneFinder.isVisible();
-
-
-                if (!skyStoneFinder.isVisible()) {
-                    moveStrafe(.333, true);
-                    //moveStrafe(.3, true);
-                    strafedistance += 1;
-                    sleep(detectionSleep);
-                }
-                //        telemetry.addData("found? ",skyStoneFinder.isVisible());
-                //        telemetry.update();
-
-                dashboardTelemetry.addData("Found? ", skyStoneFinder.isVisible());
-                dashboardTelemetry.update();
-
-                // sleep(500);
-                strafeCounter += 1;
-            }
-            moveStrafe(.3, false); // old val: .333 with other .333
-
-            turn(6 * strafedistance - 1, true);
-            moveStraight(0.1 + strafedistance * .07, true, 0.4);
-
-            /**
-             * now bring block over
-             */
-
-
-            lift(liftTarget, true); //move up to go over blocc
-
-
-            long startTime = System.currentTimeMillis();
-            while (extenderSwitch.getState() && ((System.currentTimeMillis() - startTime) < 2500)) {
-
-                extender.setPower(1.0);
-            }
-
-            telemetry.addData("start time: ", startTime);
-            telemetry.addData("runtine: ", System.currentTimeMillis());
+            telemetry.addData("Final angle: ", getAngle());
+            telemetry.addData("Start angle: ", ogAngle);
             telemetry.update();
 
-            extender.setPower(0); //stop.
-
-            rotator.setPosition(1); // should set to the right one
-
-
-            grabber.setPower(-1);
-            sleep(1200);
-            grabber.setPower(0);
-            //sleep(300);
-
-
-            lift(liftTarget, false); // move down to grab
-
-            //reset platform pullers
-            rightPlatform.setPosition(0.6);
-            leftPlatform.setPosition(0.6);
-            grabber.setPower(1);
-            sleep(3000);
-            grabber.setPower(0);
-
-            //moving under bridge sequence
-            moveStraight(.25, false, 0.4); //old val .3
-            //maybe short lift sequence here
-            rotator.setPosition(0.5);
-            sleep(200);
-
-            //Turns differently with a blocc, has to be slightly less than 90
-            turn(85, true);
-
-
-            //move straight some percentage of a tile to compensate for the strafing at the beginning plus three tiles
-
-            moveStraight(4 + (strafedistance*.33), true, 0.45);
-
-            lift(liftTarget, true);
-            turn(90, false);
-            moveStraight(.5, true, .4);
-            rightPlatform.setPosition(0.175);
-            leftPlatform.setPosition(0.175);
-            //bring lifter down later
-            // lift(liftTarget - 200, false);
-            grabber.setPower(-1);
-            sleep(500);
-            grabber.setPower(0);
-
-            //platform pulling sequence minus putting pullers down (done during grabber sleep sequence
-            moveStraight(1.1, false, .4);
-            turn(135, true);
-            moveStraight(.15, true, .4);
-
-            rightPlatform.setPosition(0.6);
-            leftPlatform.setPosition(0.6);
-            //bring lifter down later
-
-            break;
+            sleep(30000);
 
         }
 
 
     }
+
+    //2: 2, 3: 3, 5: 3, 7:
 
     public void moveStraight(double tiles, boolean forward, double speed){ //tileval is encoder val for one tile
 
@@ -505,6 +438,90 @@ public class AutonBlueAlmostGoodVuforia extends LinearOpMode {
 
         }
         lifter.setPower(0);
+    }
+
+    private double getAngle() {
+        // We experimentally determined the Z axis is the axis we want to use for heading angle.
+        // We have to process the angle because the imu works in euler angles so the Z axis is
+        // returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
+        // 180 degrees. We detect this transition and track the total cumulative angle of rotation.
+
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+
+        //tried: ZYX, XYZ, YZX, ZXY*,
+
+        double deltaAngle = angles.secondAngle - lastAngles.secondAngle;
+
+        if (deltaAngle < -180) {
+            deltaAngle += 360;
+        } else if (deltaAngle > 180) {
+            deltaAngle -= 360;
+        }
+        globalAngle += deltaAngle;
+
+        lastAngles = angles;
+
+        telemetry.addData("First angle: ", angles.firstAngle);
+        telemetry.update();
+
+        return globalAngle;
+    }
+
+    public void turnAngle(double angle, boolean counterclockwise, double error) {
+
+        turn(startAngle + angle - getAngle() - error, counterclockwise);
+
+    }
+
+    private double error(double targetPosition) {
+        return targetPosition - getAngle();
+    }
+
+    private void turnPID(double target, boolean ccw) {
+
+        double dir = ccw ? 1 : -1;
+
+        double lastError = error(target);
+        double lastTime = System.currentTimeMillis();
+        double initTime = lastTime;
+
+        double proportionTerm;
+        double derivativeTerm;
+        double integralTerm = 0;
+
+        double u = 0;
+
+        while(opModeIsActive() && Math.abs(error(target)) > 1 && System.currentTimeMillis() - initTime < timeout) {
+            double error = error(target);
+            double time = System.currentTimeMillis();
+            proportionTerm = Kp * error;
+            derivativeTerm = Kd * ((error - lastError) / Math.abs((lastTime - time)));
+            integralTerm += Ki * error * Math.abs((lastTime - time));
+
+            u = proportionTerm + integralTerm + derivativeTerm;
+
+            frontLeft.setPower(-u * dir);
+            frontRight.setPower(-u * dir);
+            backLeft.setPower(-u * dir);
+            backRight.setPower(-u * dir);
+
+            telemetry.addData("error: ", lastError);
+            telemetry.addData("front left: ", frontLeft.getPower());
+            telemetry.addData("frontRight: ", frontRight.getPower());
+            telemetry.addData("back left: ", backLeft.getPower());
+            telemetry.addData("back right: ", backRight.getPower());
+
+            telemetry.update();
+
+            lastError = error;
+            lastTime = time;
+        }
+
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
+
     }
 
 }

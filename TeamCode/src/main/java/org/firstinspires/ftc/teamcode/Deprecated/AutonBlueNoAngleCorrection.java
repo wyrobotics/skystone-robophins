@@ -1,5 +1,7 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Deprecated;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -11,13 +13,17 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuMarkInstanceId;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
-public class AutonBluePID extends LinearOpMode {
+public class AutonBlueNoAngleCorrection extends LinearOpMode {
 
     private DcMotor frontRight;
     private DcMotor frontLeft;
@@ -36,11 +42,17 @@ public class AutonBluePID extends LinearOpMode {
     private DigitalChannel extenderSwitch;
     private DigitalChannel lifterSwitch;
 
+    BNO055IMU imu;
+    Orientation lastAngles = new Orientation();
+    double globalAngle;
+
     private double strafeTarget = 950;
     private double forwardTarget = 520; //experimental: 2178, but rolls
     private double liftTarget = 850; //NEED VALUE FOR THIS
     private double turnTarget = 2150;
     private double bridgeHeight = 270; // NEED REAL VALUE THIS IS BOTH BRDGEHEGHT AND MOVING ALL THE WAY DOWN
+
+    private double startAngle;
 
     public static final String TAG = "Vuforia VuMark Sample";
 
@@ -97,7 +109,26 @@ public class AutonBluePID extends LinearOpMode {
         lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        startAngle = getAngle();
+
         rotator.setPosition(0.5);
+
+
+        BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
+
+        parametersIMU.mode = BNO055IMU.SensorMode.IMU;
+        parametersIMU.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parametersIMU.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parametersIMU.loggingEnabled = false;
+
+
+
+        // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
+        // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
+        // and named "imu".
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+
+        imu.initialize(parametersIMU);
 
         rightPlatform.setPosition(0.6);
         leftPlatform.setPosition(0.6);
@@ -143,43 +174,153 @@ public class AutonBluePID extends LinearOpMode {
         //addTrackable tells the listener to look for instances of a type of object- here it's the skystone
         skyStoneFinder.addTrackable(skyStone);
 
+
+        skyStone.setListener(skyStoneFinder);
+
         //i have no idea what this line does, but the sample code said it was helpful for debugging and not necessary
         //skyStoneTemplate.setName("skyStoneTemplate");
 
+        skyStones.activate();
+
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        Telemetry dashboardTelemetry = dashboard.getTelemetry();
+
+        FtcDashboard.getInstance().startCameraStream(vuforia,30);
+
+
+        skyStones.activate();
         waitForStart();
 
-
-        strafePID(1.0,true);
-
-
         while(opModeIsActive()) {
-            /**
-             - start on skystone side
-             - move forward 1.3 or so tiles, then do lift sequence detect;
-             - if not detected, strafe and continue detecting until the third stone
-             - default to picking up the third stone
-             - pickup sequence:
-             - lift some number of counts
-             - extend until limit switch rees
-             - rotate 90
-             - bring down:
-             - bring down, grab
-             - move backwards (hover)
-             - turn, strafe to right a bit, enough to clear other robot on platform side but not too much to hit skybridge
-             - go forward 3 tiles plus however much was strafed to the right
-             - turn right, go forward; lift up a bit, lift up a bit more
-             - latch and let go, sleep
-             - go backwards some then turn left and go forward to push platform
 
+            rightPlatform.setPosition(0.175);
+            leftPlatform.setPosition(0.175);
+
+
+            moveStraight(1.1, true, 0.4);
+
+
+            int strafeDistance = 0;
+
+            long detectionSleep = 350;
+            sleep(detectionSleep);
+
+            /*
+             *
+             - block one: detect and strafe left
+             - block two: right, detect, left
+             - block three: right right
+
+
+             check whether is visible each time before hand:
+             depending on which block, run a specfic sequence of events
              */
 
+            if(skyStoneFinder.isVisible()){
+                //strafe counter will always be zero here
+                moveStrafe(.3, false);
+            } else{
+                strafeDistance += 1;
+                moveStrafe(.333, true);
+                sleep(detectionSleep);
+                if(skyStoneFinder.isVisible()){
+                    moveStrafe(.3, false);
+                } else{
+                    strafeDistance += 1;
+                    moveStrafe(.1, true);
+                }
+            }
+
+
+
+
+
+
+
+            turn(6 * strafeDistance - 1, true);
+            moveStraight(0.1 + strafeDistance * .07 + (strafeDistance == 2 ? 0.07 : 0), true, 0.4);
+
+            /**
+             * now bring block over
+             */
+
+
+            lift(liftTarget, true); //move up to go over blocc
+
+
+            long startTime = System.currentTimeMillis();
+            while (extenderSwitch.getState() && ((System.currentTimeMillis() - startTime) < 2500)) {
+                extender.setPower(1.0);
+            }
+
+            telemetry.addData("start time: ", startTime);
+            telemetry.addData("runtine: ", System.currentTimeMillis());
+            telemetry.update();
+
+            extender.setPower(0); //stop.
+
+            rotator.setPosition(1); // should set to the right one
+
+
+            grabber.setPower(-1);
+            sleep(1200);
+            grabber.setPower(0);
+            //sleep(300);
+
+
+            lift(liftTarget, false); // move down to grab
+
+            //reset platform pullers
+            rightPlatform.setPosition(0.6);
+            leftPlatform.setPosition(0.6);
+            grabber.setPower(1);
+            sleep(3000);
+            grabber.setPower(0);
+
+            //moving under bridge sequence
+            extender.setPower(-1);
+            moveStraight(.15, false, 0.4); //old val .3
+            extender.setPower(0);
+            //maybe short lift sequence here
+            rotator.setPosition(0.5);
+            sleep(200);
+
+            //Turns differently with a blocc, has to be slightly less than 90
+            turn(85, true);
+
+
+            //move straight some percentage of a tile to compensate for the strafing at the beginning plus three tiles
+
+            moveStraight(4 + (strafeDistance*.33), true, 0.45);
+
+            lift(liftTarget, true);
+            turn(90, false);
+            moveStraight(.8, true, .4);
+            rightPlatform.setPosition(0.175);
+            leftPlatform.setPosition(0.175);
+            //bring lifter down later
+            // lift(liftTarget - 200, false);
+            grabber.setPower(-1);
+            sleep(500);
+            grabber.setPower(0);
+
+            //platform pulling sequence minus putting pullers down (done during grabber sleep sequence
+            moveStraight(1.3, false, .4);
+            turn(135, true);
+            moveStraight(.15, true, .4);
+
+            rightPlatform.setPosition(0.6);
+            leftPlatform.setPosition(0.6);
+            //bring lifter down later
+
+            break;
 
         }
 
 
     }
 
-    public void moveStraight(double tiles, boolean forward){ //tileval is encoder val for one tile
+    public void moveStraight(double tiles, boolean forward, double speed){ //tileval is encoder val for one tile
 
         //straight line motion forwards nad backwards, uses frontLft and ackRight
         //USE FRONT RIGHT AND BACK LEFT VALUES FOR STRAFING (trials averaged for a tile strafing right)
@@ -205,6 +346,8 @@ public class AutonBluePID extends LinearOpMode {
         backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        speed = speed * direction;
+
         while (opModeIsActive() &&
                 (Math.abs(frontLeft.getCurrentPosition()) <= tilesWithTolerance)
                 && (Math.abs(backRight.getCurrentPosition()) <= tilesWithTolerance)) {
@@ -213,7 +356,7 @@ public class AutonBluePID extends LinearOpMode {
             frontRight.setPower(-incrementedPower);
             backRight.setPower(-incrementedPower);*/
 
-            double speed = direction * 0.4;
+
             frontLeft.setPower(speed);
             backLeft.setPower(speed);
             frontRight.setPower(-speed);
@@ -246,98 +389,6 @@ public class AutonBluePID extends LinearOpMode {
 
     }
 
-    public void strafePID(double tiles, boolean right) {
-
-        double dir = right ? 1 : -1;
-        double setpoint = tiles * strafeTarget * dir;
-
-        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        double kP = 0.01;
-        double kI = 0.0;
-        double kD = 0.1;
-
-        //FL, FR, BL, BR -> 1, 2, 3, 4
-
-        double u1 = 0;
-        double u2 = 0;
-        double u3 = 0;
-        double u4 = 0;
-
-        double e1 = 0;
-        double e2 = 0;
-        double e3 = 0;
-        double e4 = 0;
-
-        double int1 = 0;
-        double int2 = 0;
-        double int3 = 0;
-        double int4 = 0;
-
-        double initTime = System.currentTimeMillis();
-
-        double lastE1 = -setpoint - frontLeft.getCurrentPosition();
-        double lastE2 = -setpoint - frontRight.getCurrentPosition();
-        double lastE3 = setpoint - backLeft.getCurrentPosition();
-        double lastE4 = setpoint - backRight.getCurrentPosition();
-
-        double time = initTime;
-        double lastTime = initTime;
-
-        while(opModeIsActive() && (System.currentTimeMillis() - initTime < 10000)) {
-
-            e1 = -setpoint - frontLeft.getCurrentPosition();
-            e2 = -setpoint - frontRight.getCurrentPosition();
-            e3 = setpoint - backLeft.getCurrentPosition();
-            e4 = setpoint - backRight.getCurrentPosition();
-
-            time = System.currentTimeMillis();
-
-            int1 += e1 * (time - lastTime);
-            int2 += e2 * (time - lastTime);
-            int3 += e3 * (time - lastTime);
-            int4 += e4 * (time - lastTime);
-
-            u1 = (kP * e1) + (kI * int1) + (kD * ((e1 - lastE1) / (time - lastTime)));
-            u2 = (kP * e2) + (kI * int2) + (kD * ((e2 - lastE2) / (time - lastTime)));
-            u3 = (kP * e3) + (kI * int3) + (kD * ((e3 - lastE3) / (time - lastTime)));
-            u4 = (kP * e4) + (kI * int4) + (kD * ((e4 - lastE4) / (time - lastTime)));
-
-            frontLeft.setPower(u1);
-            frontRight.setPower(u2);
-            backLeft.setPower(u3);
-            backRight.setPower(u4);
-
-            lastE1 = e1;
-            lastE2 = e2;
-            lastE3 = e3;
-            lastE4 = e4;
-
-            lastTime = time;
-
-            telemetry.addData("Front Left:", frontLeft.getCurrentPosition());
-            telemetry.addData("Front Right:", frontRight.getCurrentPosition());
-            telemetry.addData("Back Left:", backLeft.getCurrentPosition());
-            telemetry.addData("Back Right:", backRight.getCurrentPosition());
-            telemetry.update();
-
-        }
-
-        frontLeft.setPower(0);
-        frontRight.setPower(0);
-        backLeft.setPower(0);
-        backRight.setPower(0);
-
-    }
-
     // strafe defaulted to the right direction, negfative for left
     public void moveStrafe(double tiles, boolean right){ //tileval is encoder val for one tile
         int dir = 1;
@@ -364,7 +415,7 @@ public class AutonBluePID extends LinearOpMode {
         frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+        double speed = 0;
 
         while (opModeIsActive() &&
                 (Math.abs(x.getCurrentPosition()) <= tilesWithTolerance)
@@ -373,11 +424,15 @@ public class AutonBluePID extends LinearOpMode {
             backLeft.setPower(-incrementedPower);
             frontRight.setPower(incrementedPower);
             backRight.setPower(-incrementedPower);*/
-            double speed = dir * 0.8;
+
+            //speed = Math.max(-0.3, Math.min(0.3, speed + (dir * 0.007)));
+            speed = Math.max(-0.3, Math.min(0.3, speed + (dir * 0140)));
+
+
             frontLeft.setPower(speed);
             backLeft.setPower(-speed);
-            frontRight.setPower(speed + (dir * 0.1));
-            backRight.setPower(-speed + (dir * 0.1));
+            frontRight.setPower(speed);
+            backRight.setPower(-speed);
 
 
             //shows power values
@@ -480,13 +535,49 @@ public class AutonBluePID extends LinearOpMode {
         if(up){
             dir = -1;
         }
-        while(opModeIsActive() && Math.abs(lifter.getCurrentPosition()) < liftTarget && (lifterSwitch.getState() || up)){
-            lifter.setPower(dir * 0.4);
-        }
-        lifter.setPower(0);
         lifter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lifter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        while(opModeIsActive() && Math.abs(lifter.getCurrentPosition()) < liftTarget && (lifterSwitch.getState() || up)){
+            lifter.setPower(dir * 0.4);
+
+            telemetry.addData("Lifter: ", lifter.getCurrentPosition());
+            telemetry.update();
+
+        }
+        lifter.setPower(0);
+    }
+
+    private double getAngle() {
+        // We experimentally determined the Z axis is the axis we want to use for heading angle.
+        // We have to process the angle because the imu works in euler angles so the Z axis is
+        // returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
+        // 180 degrees. We detect this transition and track the total cumulative angle of rotation.
+
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+
+        //tried: ZYX, XYZ, YZX, ZXY*,
+
+        double deltaAngle = angles.secondAngle - lastAngles.secondAngle;
+
+        if (deltaAngle < -180) {
+            deltaAngle += 360;
+        } else if (deltaAngle > 180) {
+            deltaAngle -= 360;
+        }
+        globalAngle += deltaAngle;
+
+        lastAngles = angles;
+
+        telemetry.addData("First angle: ", angles.firstAngle);
+        telemetry.update();
+
+        return globalAngle;
+    }
+
+    public void turnAngle(double angle, boolean counterclockwise) {
+
+        turn(startAngle + angle - getAngle(), counterclockwise);
+
     }
 
 }
