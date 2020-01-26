@@ -1,18 +1,16 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.internal.android.dx.command.Main;
 
+@TeleOp
 public class MainTeleOp extends LinearOpMode {
 
     private MainRobot mainRobot;
 
-    public double cot(double theta) {
+    private double cot(double theta) {
         if ((theta == Math.PI / 2) || (theta == -Math.PI / 2)) {
             return 0;
         } else {
@@ -20,7 +18,7 @@ public class MainTeleOp extends LinearOpMode {
         }
     }
 
-    double po4 = Math.PI / 4;
+    private double po4 = Math.PI / 4;
 
     private double[] squareProject(double theta) {
         double[] output = new double[2];
@@ -47,9 +45,9 @@ public class MainTeleOp extends LinearOpMode {
 
         waitForStart();
 
-        while(opModeIsActive()) {
+        mainRobot.odometryTracker.startOdometry();
 
-            double rotatorInc = 0.0;
+        while(opModeIsActive()) {
 
             double[] leftStick = {this.gamepad1.left_stick_x, -this.gamepad1.left_stick_y};
 
@@ -72,9 +70,9 @@ public class MainTeleOp extends LinearOpMode {
 
             mainRobot.driveBase.setMotorPowers(frontLeft, frontRight, backLeft, backRight);
 
-            if(this.gamepad1.a && !this.gamepad2.b) {
+            if(this.gamepad1.x && !this.gamepad1.y) {
                 mainRobot.grabPlatform();
-            } else if(this.gamepad2.b) {
+            } else if(this.gamepad1.y) {
                 mainRobot.releasePlatform();
             }
 
@@ -84,20 +82,24 @@ public class MainTeleOp extends LinearOpMode {
 
             mainRobot.extend(-this.gamepad2.left_stick_y);
 
-            mainRobot.lift(-this.gamepad2.right_stick_y);
+            mainRobot.lift(this.gamepad2.right_stick_y);
 
-            if((0 != this.gamepad2.right_trigger) && !(0 != this.gamepad2.left_trigger)) {
-                rotatorInc = 0.01;
-            } else if((0 != this.gamepad2.left_trigger)) {
-                rotatorInc = -0.01;
-            } else {
-                rotatorInc = 0;
-            }
-            mainRobot.rotate(rotatorInc, true);
+            mainRobot.rotate(this.gamepad2.left_stick_x);
 
-            if(this.gamepad2.a || this.gamepad2.b) { mainRobot.grab(this.gamepad2.a); }
+            if(this.gamepad2.a || this.gamepad2.b) { mainRobot.grab(this.gamepad2.a); } else { mainRobot.grab(0);}
 
-            mainRobot.shoot(this.gamepad2.dpad_up ? 1 : (this.gamepad2.dpad_down ? -1 : 0));
+            mainRobot.shoot(this.gamepad1.dpad_up ? 1 : (this.gamepad1.dpad_down ? -1 : 0));
+
+            if(this.gamepad2.dpad_down || this.gamepad2.dpad_up) { mainRobot.backRotate(this.gamepad2.dpad_down); }
+
+            if(this.gamepad2.dpad_left || this.gamepad2.dpad_right) { mainRobot.backGrab(this.gamepad2.dpad_right); }
+
+
+
+            telemetry.addData("X-pos: ", mainRobot.odometryTracker.getPosition()[0]);
+            telemetry.addData("Y-pos: ", mainRobot.odometryTracker.getPosition()[1]);
+            telemetry.addData("Heading ", mainRobot.odometryTracker.getPosition()[2] * 360 / (2 * Math.PI));
+            telemetry.update();
 
         }
 

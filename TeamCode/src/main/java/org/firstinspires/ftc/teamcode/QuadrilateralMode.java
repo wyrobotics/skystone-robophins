@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.ServoController;
 
 import java.lang.Math;
 
-@TeleOp
 public class QuadrilateralMode extends LinearOpMode {
 
     //Drivebase motors
