@@ -1,9 +1,7 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Components;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ThreadPool;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -11,8 +9,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import java.lang.Math;
 import java.util.concurrent.ExecutorService;
 
-import static org.firstinspires.ftc.teamcode.OdometryConfig.countsPerInch;
-import static org.firstinspires.ftc.teamcode.OdometryConfig.podDistance;
+import static org.firstinspires.ftc.teamcode.Components.OdometryConfig.countsPerInch;
+import static org.firstinspires.ftc.teamcode.Components.OdometryConfig.podDistance;
 
 public class OdometryTracker {
 
@@ -21,7 +19,7 @@ public class OdometryTracker {
 
     public DcMotor leftEncoder;
     public DcMotor rightEncoder;
-    private DcMotor normalEncoder;
+    public DcMotor normalEncoder;
 
     private double leftValue;
     private double rightValue;

@@ -1,47 +1,23 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.internal.android.dx.command.Main;
+import org.firstinspires.ftc.teamcode.Components.MainRobot;
+
+import static org.firstinspires.ftc.teamcode.Components.ExtraMath.squareProject;
 
 @TeleOp
 public class MainTeleOp extends LinearOpMode {
 
     private MainRobot mainRobot;
 
-    private double cot(double theta) {
-        if ((theta == Math.PI / 2) || (theta == -Math.PI / 2)) {
-            return 0;
-        } else {
-            return 1 / Math.tan(theta);
-        }
-    }
-
-    private double po4 = Math.PI / 4;
-
-    private double[] squareProject(double theta) {
-        double[] output = new double[2];
-        if((theta < po4) && (theta >= -po4)) {
-            output[0] = 1;
-            output[1] = Math.tan(theta);
-        } else if((theta < 3 * po4) && (theta >= po4)) {
-            output[0] = cot(theta);
-            output[1] = 1;
-        } else if((theta >= 3 * po4) || (theta <= -3 * po4)) {
-            output[0] = -1;
-            output[1] = -Math.tan(theta);
-        } else if((theta < -po4) && (theta >= -3 * po4)) {
-            output[0] = -cot(theta);
-            output[1] = -1;
-        }
-        return output;
-    }
-
     @Override
     public void runOpMode() {
 
-        mainRobot = new MainRobot(hardwareMap, telemetry, 0.7);
+        mainRobot = new MainRobot(hardwareMap, telemetry, 1);
+
+        boolean backGrabberUp = true;
 
         waitForStart();
 

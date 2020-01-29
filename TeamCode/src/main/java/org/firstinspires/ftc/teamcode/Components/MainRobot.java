@@ -1,12 +1,15 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Components;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import static org.firstinspires.ftc.teamcode.MoreMath.cot;
+
+import static org.firstinspires.ftc.teamcode.Components.ExtraMath.squareProject;
 
 public class MainRobot {
 
@@ -28,12 +31,14 @@ public class MainRobot {
 
     private DigitalChannel extenderSwitch;
     private boolean extended;
-    private DigitalChannel lifterSwitch;
+    private TouchSensor lifterSwitch;
 
     private DcMotor shooter;
 
     private Servo backRotator;
     private Servo backGrabber;
+
+    private boolean backGrabberDown;
 
     public MainRobot(HardwareMap hardwareMap, Telemetry telemetry, double speed) {
 
@@ -52,12 +57,14 @@ public class MainRobot {
         rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
 
         extenderSwitch = hardwareMap.get(DigitalChannel.class, "extenderLimitSwitch");
-        lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterLimitSwitch");
+        lifterSwitch = hardwareMap.get(TouchSensor.class, "lifterSwitch");
 
         shooter = hardwareMap.get(DcMotor.class, "shooter");
 
         backRotator = hardwareMap.get(Servo.class, "backRotator");
         backGrabber = hardwareMap.get(Servo.class, "backGrabber");
+
+        backGrabber.setDirection(Servo.Direction.REVERSE);
 
         leftPlatform.setDirection(Servo.Direction.REVERSE);
         rightPlatform.setDirection(Servo.Direction.FORWARD);
@@ -72,7 +79,7 @@ public class MainRobot {
     }
 
     public void lift(double power) {
-        if(lifterSwitch.getState()) {
+        if(!lifterSwitch.isPressed()) {
             frontLifter.setPower(power * lifterSpeed);
             backLifter.setPower(power * lifterSpeed);
         } else {
@@ -128,8 +135,11 @@ public class MainRobot {
         rightPlatform.setPosition(0.6);
     }
 
-    public void backRotate(boolean down) { backRotator.setPosition(down ? 0.6 : 1);}
+    public void backRotate(boolean down) {
+        backRotator.setPosition(down ? 0.55 : 1);
+        backGrabberDown = down;
+    }
 
-    public void backGrab(boolean in) { backGrabber.setPosition(in ? 1 : 0.5);}
+    public void backGrab(boolean out) { backGrabber.setPosition(out ? 0.4 : 0.9); }
 
 }

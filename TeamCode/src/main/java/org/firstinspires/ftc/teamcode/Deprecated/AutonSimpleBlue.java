@@ -1,10 +1,9 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Deprecated;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -25,9 +24,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.firstinspires.ftc.teamcode.PIDConstants.Kd;
-import static org.firstinspires.ftc.teamcode.PIDConstants.Ki;
-import static org.firstinspires.ftc.teamcode.PIDConstants.Kp;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.Kd;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.Ki;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.Kp;
 
 @Autonomous
 public class AutonSimpleBlue extends LinearOpMode {

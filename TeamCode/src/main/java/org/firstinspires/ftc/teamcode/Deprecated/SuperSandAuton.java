@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Deprecated;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -12,9 +12,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
  * THIS AUTONPATH TEST IS WRITTEN FOR BLUE, BACK POSITION.
  */
 @Disabled
-public class AutonPath extends LinearOpMode {
-    VuforiaTest detector;
-
+public class SuperSandAuton extends LinearOpMode {
     private DcMotor frontLeft;
     private DcMotor frontRight;
     private DcMotor backLeft;
@@ -72,8 +70,7 @@ public class AutonPath extends LinearOpMode {
 
 
 
-        moveStraight(1);
-        moveStrafe(1);
+      //  move(1, frontLeft, backRight);
 
         telemetry.update();
 
@@ -103,43 +100,64 @@ public class AutonPath extends LinearOpMode {
             telemetry.addData("Back Left:", backLeft.getPortNumber());
             telemetry.addData("Back Right:", backRight.getPortNumber());*/
 
-            //update print
+        //update print
 
-            //telemetry.update();
-       // }
+        //telemetry.update();
+        // }
 
     }
     /*forward: all forward
     backward: all backward
-                    fl br backward
+    strafe       fl br backward
              right: fl br forward
                     fr bl backward
     turn: like tank drive; right: left side forward, right side backward
                            left: right side forward, left side backward
     */
-    public void moveStraight(double tiles){ //tileval is encoder val for one tile
+    public void move(double tiles, boolean straight, DcMotor a, DcMotor b, DcMotor noncode1, DcMotor noncode2){ //tileval is encoder val for one tile
+// toggles between straight and strafing
 
-        //straight line motion forwards nad backwards, uses frontLft and ackRight
-        //USE FRONT RIGHT AND BACK LEFT VALUES FOR STRAFING (trials averaged for a tile strafing right)
+        int direction = 1;
+        if(!straight){
+            direction = -1;
+        }
 
         double tilesWithTolerance = (tiles * forwardTarget) - 10;
 
         double incrementedPower = (forwardTarget -
-                (frontLeft.getCurrentPosition() + backRight.getCurrentPosition()) / 2)
-                *.0003 + .03;
+                (a.getCurrentPosition() + b.getCurrentPosition()) / 2)
+                *.0003 + .02;
 
+        //straight line motion forwards nad backwards, uses frontLft and ackRight
+        //USE FRONT RIGHT AND BACK LEFT VALUES FOR STRAFING (trials averaged for a tile strafing right)
+
+
+        /**
+         * straight line motion:
+         * fr = negative
+         * BR = negative
+         * bl = positive
+         * FL = positive
+         *
+         *
+         * streafe:
+         * fl = -
+         * FR = -
+         * br BL +
+         */
 
         while (opModeIsActive() &&
-                (Math.abs(frontLeft.getCurrentPosition()) <= tilesWithTolerance)
-                    && (Math.abs(backRight.getCurrentPosition()) <= tilesWithTolerance)) {
+                (Math.abs(a.getCurrentPosition()) <= tilesWithTolerance)
+                && (Math.abs(b.getCurrentPosition()) <= tilesWithTolerance)) {
+
+            frontRight.setPower(-incrementedPower); //negative if strafe and negative if forward
+            b.setPower(-incrementedPower); // negative if forward
             frontLeft.setPower(incrementedPower);
             backLeft.setPower(incrementedPower);
             frontRight.setPower(-incrementedPower);
             backRight.setPower(-incrementedPower);
 
-
             //shows power values
-            telemetry.addData("FORWARD", "");
             telemetry.addData("-----POWER------", "");
             telemetry.addData("Front Left:", frontLeft.getPower());
             telemetry.addData("Front Right:", frontRight.getPower());
@@ -175,61 +193,5 @@ public class AutonPath extends LinearOpMode {
     }
 
 
-    public void moveStrafe(double tiles){ //tileval is encoder val for one tile
 
-        //straight line motion forwards nad backwards, uses frontLft and ackRight
-        //USE FRONT RIGHT AND BACK LEFT VALUES FOR STRAFING (trials averaged for a tile strafing right)
-        DcMotor x = frontRight;
-        DcMotor y = backLeft;
-        double tilesWithTolerance = (tiles * strafeTarget) - 10;
-
-        double incrementedPower = (strafeTarget -
-                (x.getCurrentPosition() + y.getCurrentPosition()) / 2)
-                *.0003 + .03;
-
-
-        while (opModeIsActive() &&
-                (Math.abs(x.getCurrentPosition()) <= tilesWithTolerance)
-                && (Math.abs(y.getCurrentPosition()) <= tilesWithTolerance)) {
-            frontLeft.setPower(-incrementedPower);
-            backLeft.setPower(incrementedPower);
-            frontRight.setPower(-incrementedPower);
-            backRight.setPower(incrementedPower);
-
-
-            //shows power values
-            telemetry.addData("STRAFE", "");
-            telemetry.addData("-----POWER------", "");
-            telemetry.addData("Front Left:", frontLeft.getPower());
-            telemetry.addData("Front Right:", frontRight.getPower());
-            telemetry.addData("Back Left:", backLeft.getPower());
-            telemetry.addData("Back Right:", backRight.getPower());
-
-            //shows encoder position values (this is how you find your values for auton)
-            //getCurrentPosition() specifically does that as per the name :s
-            telemetry.addData("-----ENCODERS------", "");
-            telemetry.addData("Front Left:", frontLeft.getCurrentPosition());
-            telemetry.addData("Front Right:", frontRight.getCurrentPosition());
-            telemetry.addData("Back Left:", backLeft.getCurrentPosition());
-            telemetry.addData("Back Right:", backRight.getCurrentPosition());
-            telemetry.update();
-
-        }
-        frontLeft.setPower(0);
-        backLeft.setPower(0);
-        frontRight.setPower(0);
-        backRight.setPower(0);
-
-        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        //instructs the motor to send encoder values
-        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-    }
 }

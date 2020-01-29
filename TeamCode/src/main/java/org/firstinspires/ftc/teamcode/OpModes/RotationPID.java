@@ -1,7 +1,5 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.OpModes;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -9,8 +7,6 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.ServoController;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -19,9 +15,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import java.lang.Math;
 
-import static org.firstinspires.ftc.teamcode.PIDConstants.Kd;
-import static org.firstinspires.ftc.teamcode.PIDConstants.Ki;
-import static org.firstinspires.ftc.teamcode.PIDConstants.Kp;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.Kd;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.Ki;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.Kp;
 
 
 @TeleOp
