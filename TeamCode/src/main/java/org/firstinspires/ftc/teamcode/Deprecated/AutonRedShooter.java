@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.OpModes;
+package org.firstinspires.ftc.teamcode.Deprecated;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.Components.AutonomousOpMode;
 import org.firstinspires.ftc.teamcode.Components.AutonomousRobot;
 
 @Autonomous
-public class BlueAutonOdom extends AutonomousOpMode {
+public class AutonRedShooter extends AutonomousOpMode {
 
     public void runOpMode() {
 
@@ -115,27 +115,27 @@ public class BlueAutonOdom extends AutonomousOpMode {
             sleep(400);
         }
 
-        moveStrafe(6 + (counter == 2 ? 1 : 0), true);
+        moveStrafe(5, true);
 
-        turnTo(0,true, 2000);
+        turnTo(0,true,2000);
 
         //moveRelative(0, 4);
         autonomousRobot.backRotate(true);
         autonomousRobot.backGrab(true);
         sleep(200);
-        moveRelative(0, -13,2000);
+        moveRelative(0, -11,2000);
         autonomousRobot.backGrab(false);
         sleep(500);
         autonomousRobot.backRotate(false);
-        moveRelative(0,8,2000);
+        moveRelative(0,6,2000);
 
-        turnTo(-85, false, 2000); //ccw (left) positive delta theta
+        turnTo(-85, false,2000); //ccw (left) positive delta theta
         autonomousRobot.backRotate(true);
         sleep(100);
         moveRelative(0, -(84 - counter*8),2500);
         autonomousRobot.backRotate(false);
         turn(90,true);
-        moveRelative(0,-18,2000);
+        moveRelative(0,-12,2000);
 
         autonomousRobot.backRotate(true);
         sleep(500);
@@ -144,39 +144,15 @@ public class BlueAutonOdom extends AutonomousOpMode {
 
         autonomousRobot.backGrab(false);
         autonomousRobot.backRotate(false);
-
-        autonomousRobot.backPlatformGrab();
-
-        sleep(800);
-
-        moveRelative(0,27,2500);
-
-        turn(90,false);
-
-        /*
         moveRelative(0,6,2000);
-        turnOdom(180, true);
+        turnOdom(90, true);
         sleep(100);
-        moveRelativeOdomAngle(0, 8,2000);
 
-
-        autonomousRobot.grabPlatform();
-
-
-        sleep(1000);
-        moveRelativeOdomAngle(0,-24,2000);
-        turnOdom(90,false);
-        moveRelative(0,8,2000);
-        autonomousRobot.releasePlatform();
-        sleep(500);
-        moveRelative(0, -5,1000);
 
 
         autonomousRobot.shoot(1);
         sleep(1500);
         autonomousRobot.shoot(0);
-
-         */
 
 
 

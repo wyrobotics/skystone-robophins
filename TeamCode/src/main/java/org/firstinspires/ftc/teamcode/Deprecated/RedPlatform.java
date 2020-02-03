@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.OpModes;
+package org.firstinspires.ftc.teamcode.Deprecated;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -6,7 +6,7 @@ import org.firstinspires.ftc.teamcode.Components.AutonomousOpMode;
 import org.firstinspires.ftc.teamcode.Components.AutonomousRobot;
 
 @Autonomous
-public class BluePlatform extends AutonomousOpMode {
+public class RedPlatform extends AutonomousOpMode {
 
     public void runOpMode() {
 
@@ -16,7 +16,7 @@ public class BluePlatform extends AutonomousOpMode {
 
         autonomousRobot.odometryTracker.startOdometry();
 
-        moveRelative(-6,36,5000);
+        moveRelative(6,36,5000);
 
         moveRelative(0,4,1000);
 
@@ -26,7 +26,7 @@ public class BluePlatform extends AutonomousOpMode {
 
         moveRelative(0,-24,5000);
 
-        turnTimeout(90,true, 7000);
+        turnTimeout(90,false, 7000);
 
         moveRelative(0,24,5000);
 
@@ -36,7 +36,7 @@ public class BluePlatform extends AutonomousOpMode {
 
         moveRelative(0,-6,2000);
 
-        //turnTo(90,false, 2000);
+        //turnTo(90,true, 2000);
 
         autonomousRobot.shoot(1);
         sleep(1000);
