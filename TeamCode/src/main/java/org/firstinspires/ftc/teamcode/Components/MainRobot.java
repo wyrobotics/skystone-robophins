@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Components;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -8,6 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import static org.firstinspires.ftc.teamcode.Components.ExtraMath.squareProject;
 
@@ -17,11 +19,13 @@ public class MainRobot {
 
     public OdometryTracker odometryTracker;
 
+    private BNO055IMU imu;
+
     public DcMotor frontLifter;
     public DcMotor backLifter;
     private CRServo extender;
     private double extenderDirection;
-    private double lifterSpeed = 0.8;
+    private double lifterSpeed = 0.4;
 
     private CRServo rotator;
     private CRServo grabber;
@@ -29,14 +33,20 @@ public class MainRobot {
     private Servo leftPlatform;
     private Servo rightPlatform;
 
+    //private Servo backLeftPlatform;
+    //private Servo backRightPlatform;
+
     private DigitalChannel extenderSwitch;
     private boolean extended;
-    private TouchSensor lifterSwitch;
+    private boolean extenderSwitchOverride = false;
+    public TouchSensor lifterSwitch;
 
     private DcMotor shooter;
 
     private Servo backRotator;
     private Servo backGrabber;
+
+    private Servo backPlatformGrabber;
 
     private boolean backGrabberDown;
 
@@ -45,6 +55,17 @@ public class MainRobot {
         driveBase = new DriveBase(hardwareMap, telemetry, speed);
 
         odometryTracker = new OdometryTracker(hardwareMap, telemetry);
+
+        BNO055IMU.Parameters parametersIMU = new BNO055IMU.Parameters();
+
+        parametersIMU.mode = BNO055IMU.SensorMode.IMU;
+        parametersIMU.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parametersIMU.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parametersIMU.loggingEnabled = false;
+
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+
+        imu.initialize(parametersIMU);
 
         frontLifter = hardwareMap.get(DcMotor.class, "frontLifter");
         backLifter = hardwareMap.get(DcMotor.class, "backLifter");
@@ -64,17 +85,26 @@ public class MainRobot {
         backRotator = hardwareMap.get(Servo.class, "backRotator");
         backGrabber = hardwareMap.get(Servo.class, "backGrabber");
 
+        backPlatformGrabber = hardwareMap.get(Servo.class, "backPlatformGrabber");
+
         backGrabber.setDirection(Servo.Direction.REVERSE);
 
         leftPlatform.setDirection(Servo.Direction.REVERSE);
         rightPlatform.setDirection(Servo.Direction.FORWARD);
+
+        //backLeftPlatform.setDirection(Servo.Direction.REVERSE);
+        //backRightPlatform.setDirection(Servo.Direction.FORWARD);
 
         frontLifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLifter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+
+
         backRotate(false);
+
+        backPlatformRelease();
 
     }
 
@@ -102,17 +132,27 @@ public class MainRobot {
 
         double newPower;
 
-        if (!extenderSwitch.getState() && !extended) {
-            extenderDirection = extender.getPower();
-            extended = true;
-            newPower = 0;
-        } else { newPower = power; }
+        if(extenderSwitchOverride) {
+            extender.setPower(power);
+        } else {
+            if (!extenderSwitch.getState() && !extended) {
+                extenderDirection = extender.getPower();
+                extended = true;
+                newPower = 0;
+            } else {
+                newPower = power;
+            }
 
-        if (extended) { newPower = (extenderDirection > 0) ? Math.min(0,power) : Math.max(0,power); }
+            if (extended) {
+                newPower = (extenderDirection > 0) ? Math.min(0, power) : Math.max(0, power);
+            }
 
-        if (extended && extenderSwitch.getState()) { extended = false; }
+            if (extended && extenderSwitch.getState()) {
+                extended = false;
+            }
 
-        extender.setPower(newPower);
+            extender.setPower(newPower);
+        }
 
     }
 
@@ -135,11 +175,30 @@ public class MainRobot {
         rightPlatform.setPosition(0.6);
     }
 
+    /*
+    public void backGrabPlatform() {
+        backLeftPlatform.setPosition(0.4);
+        backRightPlatform.setPosition(0.4);
+    }
+
+    public void backReleasePlatform() {
+        backLeftPlatform.setPosition(0.5);
+        backRightPlatform.setPosition(0.5);
+    }
+
+     */
+
     public void backRotate(boolean down) {
-        backRotator.setPosition(down ? 0.55 : 1);
+        backRotator.setPosition(down ? 0.1 : 1);
         backGrabberDown = down;
     }
 
-    public void backGrab(boolean out) { backGrabber.setPosition(out ? 0.4 : 0.9); }
+    public void backGrab(boolean out) { backGrabber.setPosition(out ? 0.3 : 1); }
+
+    public void backPlatformGrab() { backPlatformGrabber.setPosition(0.55); }
+
+    public void backPlatformRelease() { backPlatformGrabber.setPosition(0.0); }
+
+    public void overrideLimitSwitch() { extenderSwitchOverride = true; }
 
 }

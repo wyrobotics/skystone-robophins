@@ -10,7 +10,9 @@ public class PIDConstants {
     public static double Kd = 0.00031;
     public static double timeout = 2000;
 
-    public static double moveRelativeP = 20;
-    public static double headingCorrection = 1.0;
+    public static double moveRelativeP = 40;
+    public static double headingCorrection = 1.5;
+    public static double accelTime = 1000;
+    public static double mrTimeout = 5000;
 
 }

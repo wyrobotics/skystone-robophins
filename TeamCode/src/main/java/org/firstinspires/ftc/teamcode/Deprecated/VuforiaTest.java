@@ -28,9 +28,12 @@
  */
 package org.firstinspires.ftc.teamcode.Deprecated;
 
+import android.graphics.Camera;
+
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -89,6 +92,8 @@ public class VuforiaTest extends LinearOpMode {
          */
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
+
+
 
         // OR...  Do Not Activate the Camera Monitor View, to save power
         // VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
@@ -158,11 +163,16 @@ public class VuforiaTest extends LinearOpMode {
 
 
         telemetry.update();
+
+
+
         waitForStart();
 
         //am also not sure what this does, but it was in the sample code lolol
         //am guessing that it serves a similar purpose to intiializing the robot? don't quote me because i don't actually know :/
         skyStones.activate();
+
+        CameraDevice.getInstance().setFlashTorchMode(true);
 
         while (opModeIsActive()) {
             //this is how i checked whether the skystones were being detected

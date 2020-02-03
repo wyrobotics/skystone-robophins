@@ -15,7 +15,7 @@ public class MainTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        mainRobot = new MainRobot(hardwareMap, telemetry, 1);
+        mainRobot = new MainRobot(hardwareMap, telemetry, 0.5);
 
         boolean backGrabberUp = true;
 
@@ -62,7 +62,7 @@ public class MainTeleOp extends LinearOpMode {
 
             mainRobot.rotate(this.gamepad2.left_stick_x);
 
-            if(this.gamepad2.a || this.gamepad2.b) { mainRobot.grab(this.gamepad2.a); } else { mainRobot.grab(0);}
+            if((this.gamepad2.left_trigger > 0) || (this.gamepad2.right_trigger > 0)) { mainRobot.grab(this.gamepad2.left_trigger > 0); } else { mainRobot.grab(0);}
 
             mainRobot.shoot(this.gamepad1.dpad_up ? 1 : (this.gamepad1.dpad_down ? -1 : 0));
 
@@ -70,14 +70,20 @@ public class MainTeleOp extends LinearOpMode {
 
             if(this.gamepad2.dpad_left || this.gamepad2.dpad_right) { mainRobot.backGrab(this.gamepad2.dpad_right); }
 
+            if(this.gamepad2.back) { mainRobot.overrideLimitSwitch(); }
+
+
 
 
             telemetry.addData("X-pos: ", mainRobot.odometryTracker.getPosition()[0]);
             telemetry.addData("Y-pos: ", mainRobot.odometryTracker.getPosition()[1]);
             telemetry.addData("Heading ", mainRobot.odometryTracker.getPosition()[2] * 360 / (2 * Math.PI));
+            telemetry.addData("Touch sensor: ", mainRobot.lifterSwitch.isPressed());
             telemetry.update();
 
         }
+
+        mainRobot.odometryTracker.shutdownOdometry();
 
     }
 
