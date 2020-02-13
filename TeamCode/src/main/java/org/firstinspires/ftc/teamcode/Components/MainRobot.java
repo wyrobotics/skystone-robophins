@@ -25,7 +25,7 @@ public class MainRobot {
     public DcMotor backLifter;
     private CRServo extender;
     private double extenderDirection;
-    private double lifterSpeed = 0.4;
+    private double lifterSpeed = 0.7;
 
     private CRServo rotator;
     private CRServo grabber;
@@ -39,16 +39,17 @@ public class MainRobot {
     private DigitalChannel extenderSwitch;
     private boolean extended;
     private boolean extenderSwitchOverride = false;
-    public TouchSensor lifterSwitch;
+    public DigitalChannel lifterSwitch;
 
     private DcMotor shooter;
 
-    private Servo backRotator;
+    private DcMotor backRotator;
     private Servo backGrabber;
 
-    private Servo backPlatformGrabber;
+    private Servo backLeftPlatformGrabber;
+    private Servo backRightPlatformGrabber;
 
-    private boolean backGrabberDown;
+    public boolean backGrabberDown = false;
 
     public MainRobot(HardwareMap hardwareMap, Telemetry telemetry, double speed) {
 
@@ -78,15 +79,21 @@ public class MainRobot {
         rightPlatform = hardwareMap.get(Servo.class, "rightPlatform");
 
         extenderSwitch = hardwareMap.get(DigitalChannel.class, "extenderLimitSwitch");
-        lifterSwitch = hardwareMap.get(TouchSensor.class, "lifterSwitch");
+        lifterSwitch = hardwareMap.get(DigitalChannel.class, "lifterSwitch");
+
+        lifterSwitch.setMode(DigitalChannel.Mode.INPUT);
 
         shooter = hardwareMap.get(DcMotor.class, "shooter");
 
-        backRotator = hardwareMap.get(Servo.class, "backRotator");
+        backRotator = hardwareMap.get(DcMotor.class, "backRotator");
         backGrabber = hardwareMap.get(Servo.class, "backGrabber");
 
-        backPlatformGrabber = hardwareMap.get(Servo.class, "backPlatformGrabber");
+        backLeftPlatformGrabber = hardwareMap.get(Servo.class, "backLeftPlatformGrabber");
+        backRightPlatformGrabber = hardwareMap.get(Servo.class, "backRightPlatformGrabber");
 
+        backLeftPlatformGrabber.setDirection(Servo.Direction.REVERSE);
+
+        backRotator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backGrabber.setDirection(Servo.Direction.REVERSE);
 
         leftPlatform.setDirection(Servo.Direction.REVERSE);
@@ -102,14 +109,14 @@ public class MainRobot {
 
 
 
-        backRotate(false);
+        //backRotate(false);
 
-        backPlatformRelease();
+        backPlatformGrab(false);
 
     }
 
     public void lift(double power) {
-        if(!lifterSwitch.isPressed()) {
+        if(lifterSwitch.getState()) {
             frontLifter.setPower(power * lifterSpeed);
             backLifter.setPower(power * lifterSpeed);
         } else {
@@ -188,16 +195,38 @@ public class MainRobot {
 
      */
 
+    /*
     public void backRotate(boolean down) {
         backRotator.setPosition(down ? 0.1 : 1);
         backGrabberDown = down;
     }
 
+     */
+
+    public void backRotate(double power) {
+        backRotator.setPower(0.5 * power);
+    }
+    public void backRotate(boolean down) {
+        if(down) {
+            backRotator.setPower(-0.5);
+            backGrabberDown = true;
+        } else {
+            backRotator.setPower(0.7);
+            backGrabberDown = false;
+        }
+    }
+
     public void backGrab(boolean out) { backGrabber.setPosition(out ? 0.3 : 1); }
 
-    public void backPlatformGrab() { backPlatformGrabber.setPosition(0.55); }
-
-    public void backPlatformRelease() { backPlatformGrabber.setPosition(0.0); }
+    public void backPlatformGrab(boolean down) {
+        if(down) {
+            backLeftPlatformGrabber.setPosition(0.55);
+            backRightPlatformGrabber.setPosition(0.55);
+        } else {
+            backLeftPlatformGrabber.setPosition(0.0);
+            backRightPlatformGrabber.setPosition(0.0);
+        }
+    }
 
     public void overrideLimitSwitch() { extenderSwitchOverride = true; }
 

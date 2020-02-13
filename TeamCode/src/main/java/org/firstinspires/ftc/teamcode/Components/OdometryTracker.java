@@ -48,7 +48,7 @@ public class OdometryTracker {
     public OdometryTracker(HardwareMap hardwareMap, Telemetry telemetry) {
 
         leftEncoder = hardwareMap.get(DcMotor.class, "backLifter");
-        rightEncoder = hardwareMap.get(DcMotor.class, "rightEncoder");
+        rightEncoder = hardwareMap.get(DcMotor.class, "backRotator");
         normalEncoder = hardwareMap.get(DcMotor.class, "shooter");
 
         leftEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -78,7 +78,7 @@ public class OdometryTracker {
 
         double l = -leftEncoder.getCurrentPosition() / countsPerInch,
                 r = -rightEncoder.getCurrentPosition() / countsPerInch,
-                n = normalEncoder.getCurrentPosition() / countsPerInch;
+                n = -normalEncoder.getCurrentPosition() / countsPerInch;
 
         double deltaL = l - leftValue,
                 deltaR = r - rightValue,
@@ -91,8 +91,8 @@ public class OdometryTracker {
         xPos += -deltaF * Math.sin(theta);
         yPos += deltaF * Math.cos(theta);
 
-        odomTheta += (deltaR - deltaL) / podDistance;
-        theta = getAngle();
+        theta += (deltaR - deltaL) / podDistance;
+        //theta = getAngle();
 
         leftValue = l;
         rightValue = r;
@@ -147,8 +147,6 @@ public class OdometryTracker {
         // 180 degrees. We detect this transition and track the total cumulative angle of rotation.
 
         Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
-
-        //tried: ZYX, XYZ, YZX, ZXY*,
 
         double deltaAngle = angles.secondAngle - lastAngles.secondAngle;
 

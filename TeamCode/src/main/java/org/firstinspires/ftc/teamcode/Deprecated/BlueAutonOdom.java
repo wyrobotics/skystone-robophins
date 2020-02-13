@@ -145,7 +145,7 @@ public class BlueAutonOdom extends AutonomousOpMode {
         autonomousRobot.backGrab(false);
         autonomousRobot.backRotate(false);
 
-        autonomousRobot.backPlatformGrab();
+        autonomousRobot.backPlatformGrab(true);
 
         sleep(800);
 

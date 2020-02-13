@@ -15,7 +15,7 @@ public class MainTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        mainRobot = new MainRobot(hardwareMap, telemetry, 0.5);
+        mainRobot = new MainRobot(hardwareMap, telemetry, 1.0);
 
         boolean backGrabberUp = true;
 
@@ -66,11 +66,14 @@ public class MainTeleOp extends LinearOpMode {
 
             mainRobot.shoot(this.gamepad1.dpad_up ? 1 : (this.gamepad1.dpad_down ? -1 : 0));
 
-            if(this.gamepad2.dpad_down || this.gamepad2.dpad_up) { mainRobot.backRotate(this.gamepad2.dpad_down); }
+            if(this.gamepad2.dpad_down || this.gamepad2.dpad_up) { mainRobot.backRotate(this.gamepad2.dpad_down ? -1 : 1); }
+            else { mainRobot.backRotate(0); }
 
             if(this.gamepad2.dpad_left || this.gamepad2.dpad_right) { mainRobot.backGrab(this.gamepad2.dpad_right); }
 
             if(this.gamepad2.back) { mainRobot.overrideLimitSwitch(); }
+
+            if(this.gamepad1.dpad_left || this.gamepad1.dpad_right) { mainRobot.backPlatformGrab(this.gamepad1.dpad_left); }
 
 
 
@@ -78,7 +81,18 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("X-pos: ", mainRobot.odometryTracker.getPosition()[0]);
             telemetry.addData("Y-pos: ", mainRobot.odometryTracker.getPosition()[1]);
             telemetry.addData("Heading ", mainRobot.odometryTracker.getPosition()[2] * 360 / (2 * Math.PI));
-            telemetry.addData("Touch sensor: ", mainRobot.lifterSwitch.isPressed());
+            telemetry.addData("Touch sensor: ", mainRobot.lifterSwitch.getState());
+            telemetry.addData("Back grabber down: ", mainRobot.backGrabberDown);
+
+
+
+            //power
+            telemetry.addData("-------------------", "");
+            telemetry.addData("","");
+            telemetry.addData("front left: ", mainRobot.driveBase.frontLeft.getPower());
+            telemetry.addData("back left: ", mainRobot.driveBase.backLeft.getPower());
+            telemetry.addData("front right: ", mainRobot.driveBase.frontRight.getPower());
+            telemetry.addData("back right: ", mainRobot.driveBase.backRight.getPower());
             telemetry.update();
 
         }

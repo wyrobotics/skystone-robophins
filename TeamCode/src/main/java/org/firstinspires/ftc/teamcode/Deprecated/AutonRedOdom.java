@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Deprecated;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.teamcode.Components.AutonomousOpMode;
 import org.firstinspires.ftc.teamcode.Components.AutonomousRobot;
 
 @Autonomous
+@Disabled
 public class AutonRedOdom extends AutonomousOpMode {
 
     public void runOpMode() {
@@ -146,7 +148,7 @@ public class AutonRedOdom extends AutonomousOpMode {
 
         sleep(300);
 
-        autonomousRobot.backPlatformGrab();
+        autonomousRobot.backPlatformGrab(true);
 
         sleep(800);
 

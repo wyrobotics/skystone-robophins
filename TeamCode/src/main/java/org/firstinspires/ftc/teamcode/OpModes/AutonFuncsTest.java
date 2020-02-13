@@ -16,12 +16,14 @@ public class AutonFuncsTest extends AutonomousOpMode {
 
         waitForStart();
 
-        //moveRelative(0,0, 90);
+        //moveRelative(24,0, 1000000);
 
         //moveStrafe(6, true);
 
-        turn(90, false);
-        //gyroturn(90, true);
+        //turn(90, false);
+        ////gyroturn(90, true);
+        simpleTurn(90, false);
+
         autonomousRobot.odometryTracker.shutdownOdometry();
 
         sleep(100000);

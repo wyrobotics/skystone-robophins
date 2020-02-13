@@ -145,7 +145,7 @@ public class AutonRedShooter extends AutonomousOpMode {
         autonomousRobot.backGrab(false);
         autonomousRobot.backRotate(false);
         moveRelative(0,6,2000);
-        turnOdom(90, true);
+        turn(90, true);
         sleep(100);
 
 
