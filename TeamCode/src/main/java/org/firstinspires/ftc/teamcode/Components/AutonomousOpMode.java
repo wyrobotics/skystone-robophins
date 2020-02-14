@@ -327,7 +327,9 @@ public abstract class AutonomousOpMode extends LinearOpMode {
 
         double thetaError = 0;
 
-        double[] motorPowers = new double[4];
+        double[] motorPowers = new double[] {0, 0, 0, 0};
+
+        double[] currentPosition;
 
         while(opModeIsActive() && Math.abs(relativeDisplacement[0]) > 2) {
 
@@ -343,17 +345,26 @@ public abstract class AutonomousOpMode extends LinearOpMode {
 
             autonomousRobot.driveBase.setMotorPowers(motorPowers);
 
+            currentPosition = autonomousRobot.odometryTracker.getPosition();
+
+            relativeDisplacement = rotateVec(vectorSub(targetPos, currentPosition), -currentPosition[2]);
+
+            thetaError = initPos[2] - currentPosition[2];
+
             telemetry.addData("FL: ", motorPowers[0]);
             telemetry.addData("FR: ", motorPowers[1]);
             telemetry.addData("BL: ", motorPowers[2]);
             telemetry.addData("BR: ", motorPowers[3]);
-
+            telemetry.addData("Relative dx: ", relativeDisplacement[0]);
+            telemetry.addData("Relative dy: ", relativeDisplacement[1]);
+            telemetry.addData("Theta error", thetaError);
             telemetry.update();
 
         }
 
         autonomousRobot.driveBase.setMotorPowers(new double[] {0, 0, 0, 0});
 
+        /*
         telemetry.addData("Done","Doneeee");
         telemetry.addData("Relative dx: ", relativeDisplacement[0]);
         telemetry.addData("Relative dy: ", relativeDisplacement[1]);
@@ -364,6 +375,8 @@ public abstract class AutonomousOpMode extends LinearOpMode {
         telemetry.addData("Init x", initPos[0]);
         telemetry.addData("Init y", initPos[1]);
         telemetry.update();
+
+         */
 
     }
 
