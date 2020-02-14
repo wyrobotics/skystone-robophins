@@ -14,6 +14,9 @@ import static org.firstinspires.ftc.teamcode.Components.PIDConstants.accelTime;
 import static org.firstinspires.ftc.teamcode.Components.PIDConstants.headingCorrection;
 import static org.firstinspires.ftc.teamcode.Components.PIDConstants.moveRelativeP;
 import static org.firstinspires.ftc.teamcode.Components.PIDConstants.mrTimeout;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.strafeP;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.strafeRotateCorrection;
+import static org.firstinspires.ftc.teamcode.Components.PIDConstants.strafeYCorrection;
 
 public abstract class AutonomousOpMode extends LinearOpMode {
 
@@ -314,17 +317,53 @@ public abstract class AutonomousOpMode extends LinearOpMode {
 
         double[] initPos = autonomousRobot.odometryTracker.getPosition();
 
-        double[] dPos = rotateVec(new double[] {distance * (right ? 1 : -1)},initPos[2]);
+        double[] dPos = rotateVec(new double[] {distance * (right ? 1 : -1), 0}, initPos[2]);
 
-        double[] targetPos = initPos;
+        double[] targetPos = new double[] {initPos[0], initPos[1], initPos[2]};
         targetPos[0] += dPos[0];
         targetPos[1] += dPos[1];
 
-        double maintainedY = initPos[1];
+        double[] relativeDisplacement = rotateVec(vectorSub(targetPos, initPos), -initPos[2]);
 
-        double relativeXError;
+        double thetaError = 0;
 
-       // while(opModeIsActive() && Math.abs(relativeXError) > 2)
+        double[] motorPowers = new double[4];
+
+        while(opModeIsActive() && Math.abs(relativeDisplacement[0]) > 2) {
+
+            motorPowers[0] = relativeDisplacement[0] * (Math.min(1,relativeDisplacement[0] * strafeP));
+            motorPowers[1] = -relativeDisplacement[0] * (Math.min(1,relativeDisplacement[0] * strafeP));
+            motorPowers[2] = -relativeDisplacement[0] * (Math.min(1,relativeDisplacement[0] * strafeP));
+            motorPowers[3] = relativeDisplacement[0] * (Math.min(1,relativeDisplacement[0] * strafeP));
+
+            motorPowers[0] += thetaError * strafeRotateCorrection - relativeDisplacement[1] * strafeYCorrection;
+            motorPowers[1] += -thetaError * strafeRotateCorrection - relativeDisplacement[1] * strafeYCorrection;
+            motorPowers[2] += thetaError * strafeRotateCorrection - relativeDisplacement[1] * strafeYCorrection;
+            motorPowers[3] += -thetaError * strafeRotateCorrection - relativeDisplacement[1] * strafeYCorrection;
+
+            autonomousRobot.driveBase.setMotorPowers(motorPowers);
+
+            telemetry.addData("FL: ", motorPowers[0]);
+            telemetry.addData("FR: ", motorPowers[1]);
+            telemetry.addData("BL: ", motorPowers[2]);
+            telemetry.addData("BR: ", motorPowers[3]);
+
+            telemetry.update();
+
+        }
+
+        autonomousRobot.driveBase.setMotorPowers(new double[] {0, 0, 0, 0});
+
+        telemetry.addData("Done","Doneeee");
+        telemetry.addData("Relative dx: ", relativeDisplacement[0]);
+        telemetry.addData("Relative dy: ", relativeDisplacement[1]);
+        telemetry.addData("dPos x: ", dPos[0]);
+        telemetry.addData("dPos y: ", dPos[1]);
+        telemetry.addData("Target x",targetPos[0]);
+        telemetry.addData("Target y",targetPos[1]);
+        telemetry.addData("Init x", initPos[0]);
+        telemetry.addData("Init y", initPos[1]);
+        telemetry.update();
 
     }
 

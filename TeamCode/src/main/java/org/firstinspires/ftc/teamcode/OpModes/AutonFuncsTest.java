@@ -22,7 +22,7 @@ public class AutonFuncsTest extends AutonomousOpMode {
 
         //turn(90, false);
         ////gyroturn(90, true);
-        simpleTurn(90, false);
+        strafeProfiled(24, true);
 
         autonomousRobot.odometryTracker.shutdownOdometry();
 

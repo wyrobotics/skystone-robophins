@@ -15,4 +15,8 @@ public class PIDConstants {
     public static double accelTime = 1000;
     public static double mrTimeout = 5000;
 
+    public static double strafeP = 1 / 12;
+    public static double strafeYCorrection = 0.2;
+    public static double strafeRotateCorrection = 0.5;
+
 }
