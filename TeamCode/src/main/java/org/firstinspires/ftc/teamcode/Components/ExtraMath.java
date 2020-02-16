@@ -60,4 +60,8 @@ public class ExtraMath {
         return new double[] {(v[0] * Math.cos(theta)) - (v[1] * Math.sin(theta)), (v[0] * Math.sin(theta)) + (v[1] * Math.cos(theta))};
     }
 
+    public static double range(double val, double lower, double upper) {
+        return Math.max(lower,Math.min(upper,val));
+    }
+
 }

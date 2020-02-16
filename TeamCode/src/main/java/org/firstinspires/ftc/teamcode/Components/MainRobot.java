@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -18,8 +19,6 @@ public class MainRobot {
     public DriveBase driveBase;
 
     public OdometryTracker odometryTracker;
-
-    private BNO055IMU imu;
 
     public DcMotor frontLifter;
     public DcMotor backLifter;
@@ -63,10 +62,6 @@ public class MainRobot {
         parametersIMU.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         parametersIMU.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parametersIMU.loggingEnabled = false;
-
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-
-        imu.initialize(parametersIMU);
 
         frontLifter = hardwareMap.get(DcMotor.class, "frontLifter");
         backLifter = hardwareMap.get(DcMotor.class, "backLifter");
@@ -229,5 +224,9 @@ public class MainRobot {
     }
 
     public void overrideLimitSwitch() { extenderSwitchOverride = true; }
+
+    public void yeet(boolean party) {
+        CameraDevice.getInstance().setFlashTorchMode(party);
+    }
 
 }

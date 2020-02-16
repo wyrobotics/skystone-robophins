@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.Components;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.vuforia.CameraDevice;
 
 import static org.firstinspires.ftc.teamcode.Components.ExtraMath.makeUnit;
 import static org.firstinspires.ftc.teamcode.Components.ExtraMath.norm;
+import static org.firstinspires.ftc.teamcode.Components.ExtraMath.range;
 import static org.firstinspires.ftc.teamcode.Components.ExtraMath.rotateVec;
 import static org.firstinspires.ftc.teamcode.Components.ExtraMath.scalarMult;
 import static org.firstinspires.ftc.teamcode.Components.ExtraMath.vectorSub;
@@ -40,7 +42,7 @@ public abstract class AutonomousOpMode extends LinearOpMode {
         double[] currentPos = initState;
         double angularError = 0;
 
-        while ((norm(displacement) > 0.2 || Math.abs(angularError) > 0.01) && (System.currentTimeMillis() - initTime < timeout) && opModeIsActive()) {
+        while ((norm(displacement) > 0.5 || Math.abs(angularError) > 0.03) && (System.currentTimeMillis() - initTime < timeout) && opModeIsActive()) {
 
             angularError = initState[2] - currentPos[2];
 
@@ -148,7 +150,7 @@ public abstract class AutonomousOpMode extends LinearOpMode {
 
     */
 
-    public void moveStrafe(double distance, boolean left) {
+    protected void moveStrafe(double distance, boolean left) {
 
         double dir = left ? 1 : -1;
         double[] currentPosition = autonomousRobot.odometryTracker.getPosition();
@@ -188,24 +190,17 @@ public abstract class AutonomousOpMode extends LinearOpMode {
 
     }
 
-    public void turn(double angle, boolean ccw) {
+    protected void turn(double angle, boolean ccw) {
 
         double dir = ccw ? 1 : -1;
         double currentAngle = autonomousRobot.odometryTracker.getPosition()[2];
         double targetAngle = currentAngle + (dir * (2 * Math.PI * angle / 360));
 
-        if (targetAngle > 180) {
-            targetAngle -= 2 * Math.PI;
-        }
-        if (targetAngle < -180) {
-            targetAngle += 2 * Math.PI;
-        }
-
         if (ccw) {
             while (currentAngle < targetAngle && opModeIsActive()) {
                 double u = Math.min(1, Math.abs((targetAngle - currentAngle) / (Math.PI / 2)));
                 autonomousRobot.driveBase.setMotorPowers(-u, u, -u, u);
-                currentAngle = autonomousRobot.odometryTracker.getAngle();
+                currentAngle = autonomousRobot.odometryTracker.getPosition()[2];
                 telemetry.addData("Current Angle: ", currentAngle);
                 telemetry.addData("Target Angle: ", targetAngle);
                 telemetry.update();
@@ -214,7 +209,7 @@ public abstract class AutonomousOpMode extends LinearOpMode {
             while (currentAngle > targetAngle && opModeIsActive()) {
                 double u = Math.min(1, Math.abs((targetAngle - currentAngle) / (Math.PI / 2)));
                 autonomousRobot.driveBase.setMotorPowers(u, -u, u, -u);
-                currentAngle = autonomousRobot.odometryTracker.getAngle();
+                currentAngle = autonomousRobot.odometryTracker.getPosition()[2];
             }
         }
 
@@ -222,25 +217,18 @@ public abstract class AutonomousOpMode extends LinearOpMode {
 
     }
 
-    public void turnTimeout(double angle, boolean ccw, double timeout) {
+    protected void turnTimeout(double angle, boolean ccw, double timeout) {
 
         double dir = ccw ? 1 : -1;
         double currentAngle = autonomousRobot.odometryTracker.getPosition()[2];
         double targetAngle = currentAngle + (dir * (2 * Math.PI * angle / 360));
         double initTime = System.currentTimeMillis();
 
-        if (targetAngle > 180) {
-            targetAngle -= 2 * Math.PI;
-        }
-        if (targetAngle < -180) {
-            targetAngle += 2 * Math.PI;
-        }
-
         if (ccw) {
             while (currentAngle < targetAngle && opModeIsActive() && (initTime > System.currentTimeMillis() - timeout)) {
                 double u = Math.min(1, Math.abs((targetAngle - currentAngle) / (Math.PI / 2)));
                 autonomousRobot.driveBase.setMotorPowers(-u, u, -u, u);
-                currentAngle = autonomousRobot.odometryTracker.getAngle();
+                currentAngle = autonomousRobot.odometryTracker.getPosition()[2];
                 telemetry.addData("Current Angle: ", currentAngle);
                 telemetry.addData("Target Angle: ", targetAngle);
                 telemetry.update();
@@ -249,7 +237,7 @@ public abstract class AutonomousOpMode extends LinearOpMode {
             while (currentAngle > targetAngle && opModeIsActive()) {
                 double u = Math.min(1, Math.abs((targetAngle - currentAngle) / (Math.PI / 2)));
                 autonomousRobot.driveBase.setMotorPowers(u, -u, u, -u);
-                currentAngle = autonomousRobot.odometryTracker.getAngle();
+                currentAngle = autonomousRobot.odometryTracker.getPosition()[2];
             }
         }
 
@@ -257,7 +245,7 @@ public abstract class AutonomousOpMode extends LinearOpMode {
 
     }
 
-    public void turnTo(double angle, boolean ccw, double timeout) {
+    protected void turnTo(double angle, boolean ccw, double timeout) {
 
         double dir = ccw ? 1 : -1;
         double currentAngle = autonomousRobot.odometryTracker.getPosition()[2];
@@ -288,14 +276,14 @@ public abstract class AutonomousOpMode extends LinearOpMode {
     //chlo simple backup functions
     //backup encoder values
 
-    public void simpleTurn(double angle, boolean ccw) {
+    protected void simpleTurn(double angle, boolean ccw) {
         double initialpos = 180 * autonomousRobot.odometryTracker.getPosition()[2] / Math.PI;
         int dir = 1;
         if (ccw) {
             //ccw then right positive left negative
             dir = -1;
         }
-        while (opModeIsActive()){// && Ma180 * autonomousRobot.odometryTracker.getPosition()[2]) > 10) {
+        while (opModeIsActive() && Math.abs(180 * autonomousRobot.odometryTracker.getPosition()[2] / Math.PI) - angle < 10){
             //autonomousRobot.driveBase.frontLeft.setPower(dir);
             //autonomousRobot.driveBase.backLeft.setPower(dir);
             // autonomousRobot.driveBase.frontRight.setPower(-dir);
@@ -313,11 +301,13 @@ public abstract class AutonomousOpMode extends LinearOpMode {
     }
 
 
-    public void strafeProfiled(double distance, boolean right) {
+    protected void strafeProfiled(double distance, boolean right) {
 
         double[] initPos = autonomousRobot.odometryTracker.getPosition();
 
-        double[] dPos = rotateVec(new double[] {distance * (right ? 1 : -1), 0}, initPos[2]);
+        double dir = right ? 1 : -1;
+
+        double[] dPos = rotateVec(new double[] {distance * dir, 0}, initPos[2]);
 
         double[] targetPos = new double[] {initPos[0], initPos[1], initPos[2]};
         targetPos[0] += dPos[0];
@@ -331,23 +321,25 @@ public abstract class AutonomousOpMode extends LinearOpMode {
 
         double[] currentPosition;
 
-        while(opModeIsActive() && Math.abs(relativeDisplacement[0]) > 2) {
+        double initTime = System.currentTimeMillis();
 
-            motorPowers[0] = relativeDisplacement[0] * (Math.min(1,relativeDisplacement[0] * strafeP));
-            motorPowers[1] = -relativeDisplacement[0] * (Math.min(1,relativeDisplacement[0] * strafeP));
-            motorPowers[2] = -relativeDisplacement[0] * (Math.min(1,relativeDisplacement[0] * strafeP));
-            motorPowers[3] = relativeDisplacement[0] * (Math.min(1,relativeDisplacement[0] * strafeP));
+        while(opModeIsActive() && Math.abs(relativeDisplacement[0]) > 0.5 && System.currentTimeMillis() - 3000 < initTime) {
 
-            motorPowers[0] += thetaError * strafeRotateCorrection - relativeDisplacement[1] * strafeYCorrection;
-            motorPowers[1] += -thetaError * strafeRotateCorrection - relativeDisplacement[1] * strafeYCorrection;
-            motorPowers[2] += thetaError * strafeRotateCorrection - relativeDisplacement[1] * strafeYCorrection;
-            motorPowers[3] += -thetaError * strafeRotateCorrection - relativeDisplacement[1] * strafeYCorrection;
+            motorPowers[0] = dir * range(relativeDisplacement[0],-1,1) * (range(relativeDisplacement[0] * strafeP,-1,1));
+            motorPowers[1] = dir * -range(relativeDisplacement[0],-1,1) * (range(relativeDisplacement[0] * strafeP,-1,1));
+            motorPowers[2] = dir * -range(relativeDisplacement[0],-1,1) * (range(relativeDisplacement[0] * strafeP,-1,1));
+            motorPowers[3] = dir * range(relativeDisplacement[0],-1,1) * (range(relativeDisplacement[0] * strafeP,-1,1));
+
+            motorPowers[0] += -thetaError * strafeRotateCorrection + relativeDisplacement[1] * strafeYCorrection;
+            motorPowers[1] += thetaError * strafeRotateCorrection + relativeDisplacement[1] * strafeYCorrection;
+            motorPowers[2] += -thetaError * strafeRotateCorrection + relativeDisplacement[1] * strafeYCorrection;
+            motorPowers[3] += thetaError * strafeRotateCorrection + relativeDisplacement[1] * strafeYCorrection;
 
             autonomousRobot.driveBase.setMotorPowers(motorPowers);
 
             currentPosition = autonomousRobot.odometryTracker.getPosition();
 
-            relativeDisplacement = rotateVec(vectorSub(targetPos, currentPosition), -currentPosition[2]);
+            relativeDisplacement = rotateVec(vectorSub(targetPos, currentPosition), -initPos[2]);
 
             thetaError = initPos[2] - currentPosition[2];
 
@@ -378,8 +370,20 @@ public abstract class AutonomousOpMode extends LinearOpMode {
 
          */
 
+        telemetry.addData("Final angle", autonomousRobot.odometryTracker.getPosition()[2]);
+        telemetry.addData("Relative dx: ", relativeDisplacement[0]);
+        telemetry.addData("Relative dy: ", relativeDisplacement[1]);
+        telemetry.update();
+
     }
 
+    protected void skystoneSleep(double millis) {
+        double initTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - millis < initTime)
+        { if(autonomousRobot.skyStoneFinder.isVisible()) {break;} }
+    }
+
+    protected void flashlight(boolean on) { CameraDevice.getInstance().setFlashTorchMode(on); }
 
 
 }
