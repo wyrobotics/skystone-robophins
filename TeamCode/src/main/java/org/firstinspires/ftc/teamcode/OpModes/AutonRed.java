@@ -48,19 +48,21 @@ public class AutonRed extends AutonomousOpMode {
         autonomousRobot.backGrab(false);
         sleep(500);
         autonomousRobot.backRotate(false);
-        sleep(1000);
+        sleep(500);
 
         moveRelative(0,10,1000);
-        autonomousRobot.backRotate(true);
-        turn(85, true);
+
+        autonomousRobot.backRotate(-0.8);
+        turn(86, true);
         autonomousRobot.backRotate(0);
 
-        moveRelative(0,69 + 8 * strafeCounter - (strafeCounter == 0 ? 3 : 0), 3000);
+        moveRelative(0,72 + 8 * strafeCounter - (strafeCounter == 0 ? 3 : 0), 3000);
+        //moveRelative(0,Math.abs(-78 - autonomousRobot.odometryTracker.getPosition()[1]),3000);
         autonomousRobot.backRotate(false);
         turn(90,false);
         autonomousRobot.backRotate(0);
 
-        moveRelative(0,-19,2000);
+        moveRelative(0,-17,2000);
         autonomousRobot.backRotate(true);
         autonomousRobot.backGrab(true);
         sleep(300);
@@ -70,15 +72,15 @@ public class AutonRed extends AutonomousOpMode {
         autonomousRobot.backPlatformGrab(true);
         sleep(500);
 
-        moveRelative(0,30,3000);
-        turnTimeout(90,false,2000);
+        moveRelative(0,30,2700);
+        turnTimeout(90,false,1500);
 
-        moveRelative(0,-30,1000);
+        moveRelative(0,-30,500);
 
         autonomousRobot.backPlatformGrab(false);
         sleep(300);
-        moveRelative(0,12,1000);
-        turn(180,true);
+        moveRelative(0,70,300);
+        turn(190,true);
         autonomousRobot.shoot(1);
         sleep(1000);
         autonomousRobot.shoot(0);

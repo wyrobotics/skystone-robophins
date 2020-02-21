@@ -215,8 +215,8 @@ public class MainRobot {
 
     public void backPlatformGrab(boolean down) {
         if(down) {
-            backLeftPlatformGrabber.setPosition(0.55);
-            backRightPlatformGrabber.setPosition(0.55);
+            backLeftPlatformGrabber.setPosition(0.5);
+            backRightPlatformGrabber.setPosition(0.5);
         } else {
             backLeftPlatformGrabber.setPosition(0.0);
             backRightPlatformGrabber.setPosition(0.0);
