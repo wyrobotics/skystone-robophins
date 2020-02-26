@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Deprecated;
+package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -16,7 +16,7 @@ public class TapeShoot extends AutonomousOpMode {
         waitForStart();
 
         autonomousRobot.shoot(1);
-        sleep(1000);
+        sleep(400);
         autonomousRobot.shoot(0);
 
 

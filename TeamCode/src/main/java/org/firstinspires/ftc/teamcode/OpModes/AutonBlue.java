@@ -79,8 +79,10 @@ public class AutonBlue extends AutonomousOpMode {
 
         moveRelative(0,-14 - (strafeCounter == 1 ? 3 : 0),2000);
         autonomousRobot.backRotate(true);
-        autonomousRobot.backGrab(true);
+
         sleep(300);
+        autonomousRobot.backGrab(true);
+        sleep(500);
         autonomousRobot.backRotate(false);
         sleep(300);
         autonomousRobot.backGrab(false);
@@ -95,10 +97,12 @@ public class AutonBlue extends AutonomousOpMode {
         autonomousRobot.backPlatformGrab(false);
         sleep(300);
         moveRelative(0,12,700);
-        turn(185,true);
+        turn(160,false);
         autonomousRobot.shoot(1);
         sleep(1150);
         autonomousRobot.shoot(0);
+
+        autonomousRobot.odometryTracker.shutdownOdometry();
 
     }
 

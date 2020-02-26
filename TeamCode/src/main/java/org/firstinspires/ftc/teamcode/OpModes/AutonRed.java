@@ -66,8 +66,9 @@ public class AutonRed extends AutonomousOpMode {
 
         moveRelative(0,-17,2000);
         autonomousRobot.backRotate(true);
-        autonomousRobot.backGrab(true);
         sleep(300);
+        autonomousRobot.backGrab(true);
+        sleep(500);
         autonomousRobot.backRotate(false);
         sleep(300);
         autonomousRobot.backGrab(false);
@@ -82,10 +83,12 @@ public class AutonRed extends AutonomousOpMode {
         autonomousRobot.backPlatformGrab(false);
         sleep(300);
         moveRelative(0,70,300);
-        turn(190,true);
+        turn(160,true);
         autonomousRobot.shoot(1);
         sleep(1000);
         autonomousRobot.shoot(0);
+
+        autonomousRobot.odometryTracker.shutdownOdometry();
 
     }
 
