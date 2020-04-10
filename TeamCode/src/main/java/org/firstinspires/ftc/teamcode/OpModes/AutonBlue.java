@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.Components.AutonomousOpMode;
 import org.firstinspires.ftc.teamcode.Components.AutonomousRobot;
+import org.firstinspires.ftc.teamcode.Components.Position;
 
 @Autonomous
 public class AutonBlue extends AutonomousOpMode {
@@ -101,6 +102,10 @@ public class AutonBlue extends AutonomousOpMode {
         autonomousRobot.shoot(1);
         sleep(1150);
         autonomousRobot.shoot(0);
+
+        Position.setPos(autonomousRobot.odometryTracker.getPosition()[0],
+                autonomousRobot.odometryTracker.getPosition()[1],
+                autonomousRobot.odometryTracker.getPosition()[2]);
 
         autonomousRobot.odometryTracker.shutdownOdometry();
 
